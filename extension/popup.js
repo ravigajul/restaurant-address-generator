@@ -1,4 +1,5 @@
 /* global LOCALES, generate */
+(() => { // own scope: generator.js already defines helpers like `fill`
 const $ = id => document.getElementById(id);
 const EN = { US:'United States', CA:'Canada', GB:'United Kingdom', AU:'Australia', NZ:'New Zealand', IE:'Ireland', IN:'India',
   DE:'Germany', FR:'France', ES:'Spain', IT:'Italy', NL:'Netherlands', SE:'Sweden', BR:'Brazil', JP:'Japan' };
@@ -126,7 +127,7 @@ function fillPage(d, states){
   return filled;
 }
 
-async function fill(){
+async function fillTab(){
   if (!data) return;
   try {
     const [tab] = await chrome.tabs.query({ active:true, currentWindow:true });
@@ -141,5 +142,6 @@ async function fill(){
 for (const code of Object.keys(LOCALES)){ const o = document.createElement('option'); o.value = code; o.label = LOCALES[code].country; $('locs').appendChild(o); }
 $('gen').addEventListener('click', render);
 $('loc').addEventListener('keydown', e => { if (e.key === 'Enter') render(); });
-$('fill').addEventListener('click', fill);
+$('fill').addEventListener('click', fillTab);
 chrome.storage.local.get('locale', ({ locale }) => { if (locale) $('loc').value = locale; render(); });
+})();
