@@ -22,6 +22,8 @@ name, id, placeholder and label text. React/Vue forms are supported.
 
 Pin it, open the form page, click the icon, **Generate**, then **Fill this page**.
 
+**Want to know how it works?** See [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md) for a walkthrough of the manifest, popup, script injection, field matching and tests.
+
 **Tests** — `cd tests && npm i && npm test` launches real Chrome with the extension and fills two test forms across 8 locales.
 Set `BROWSER=/path/to/msedge` to run the same suite in Edge.
 
