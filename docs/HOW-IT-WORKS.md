@@ -99,7 +99,7 @@ Everything runs in the browser, with no backend.
 - **Tax IDs:** they follow each country's real format and check-digit rule (Luhn, mod 11, mod 97, and so on), so they pass format validators. They are not registered to any business, so they are for testing only.
 - **Phone:** national digits only, with no country code.
 - **Email:** `first.last##@example.com`. The `example.com` domain is reserved for documentation, so mail never reaches a real inbox.
-- **State / region:** `generate(code, region)` filters the locale's city list to that region (`regionOf` treats the prefecture as the region for Japan). `EXTRA_CITIES` supplies extra cities so most states have an entry, and `REGION_NAMES` maps abbreviations to full names (`US_NY` → New York) for labels and for dropdowns that list full names.
+- **State / region:** the box is a text input with a `<datalist>` for suggestions. `resolveRegion(code, text)` turns what you typed into a region key: it ignores case, accents, spaces and punctuation, accepts the abbreviation, full name or `NY — New York` label, or a unique prefix of at least 3 letters, and returns `null` if nothing (or more than one region) matches. `generate(code, region)` filters the locale's city list to that region (`regionOf` treats the prefecture as the region for Japan). `EXTRA_CITIES` supplies extra cities so most states have an entry, and `REGION_NAMES` maps abbreviations to full names (`US_NY` → New York) for labels and for dropdowns that list full names.
 - **Locale lookup:** `en_IT` falls back to the country part, `it_IT`.
 
 ## 7. Testing

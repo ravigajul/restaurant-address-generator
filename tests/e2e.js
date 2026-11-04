@@ -19,7 +19,7 @@ const extId=crypto.createHash('sha256').update(EXT).digest('hex').slice(0,32).re
    const errs=[]; pop.on('pageerror',e=>errs.push(e.message)); pop.on('console',m=>m.type()==='error'&&errs.push(m.text()));
    await pop.evaluate(async url=>{const [t]=await chrome.tabs.query({url}); chrome.tabs.query=async()=>[t];},formUrl);
    await pop.$eval('#loc',(e,v)=>{e.value=v;e.dispatchEvent(new Event('input'))},locale);
-   if(region) await pop.select('#reg',region); await pop.click('#gen');
+   if(region) await pop.$eval('#reg',(e,v)=>e.value=v,region); await pop.click('#gen');
    const rows=await pop.$$eval('.f',els=>els.map(e=>[e.children[0].textContent,e.children[1].textContent]));
    await pop.click('#fill');
    await pop.waitForFunction(()=>/Filled|No matching|Could not|⚠|allow/.test(document.getElementById('msg').textContent),{timeout:15000}).catch(async()=>{console.log('  TIMEOUT msg=',await pop.$eval('#msg',e=>e.textContent),'errs=',errs)});
@@ -41,13 +41,17 @@ const extId=crypto.createHash('sha256').update(EXT).digest('hex').slice(0,32).re
    const reg=R(rows,'State/Region'); if(['en_US','en_AU','en_CA'].includes(locale)) check(vals.state && !/Select/.test(vals.state) && vals.state!=='','STATE selected: '+reg+' -> '+JSON.stringify(vals.state));
    check(vals.taxId===rows.at(-1)[1],'tax '+vals.taxId);
  }
- for(const [locale,region,city,stateName] of [['en_US','WA','Seattle','Washington'],['en_AU','WA','Perth','Western Australia'],['en_CA','NS','Halifax','Nova Scotia'],['en_US','NY',null,'New York']]){
-   console.log(`\n== us.html with ${locale} + chosen state ${region}`); const {rows,msg,vals,errs}=await run('us.html',locale,region);
+ for(const [locale,typed,key,city,stateName] of [['en_US','WA','WA','Seattle','Washington'],['en_AU','wa','WA','Perth','Western Australia'],['en_CA','NS','NS','Halifax','Nova Scotia'],
+     ['en_US','ny','NY',null,'New York'],['en_US','newyork','NY',null,'New York'],['en_US','New York','NY',null,'New York'],['en_US','GA','GA','Atlanta','Georgia'],
+     ['en_US','georgia','GA','Atlanta','Georgia'],['en_US','wash','WA','Seattle','Washington'],['en_AU','western australia','WA','Perth','Western Australia']]){
+   console.log(`\n== us.html with ${locale} + typed state "${typed}"`); const {rows,msg,vals,errs}=await run('us.html',locale,typed);
    console.log('  popup:',msg.replace(/\n/g,' | ')); check(!errs.length,'no popup errors '+errs.join(';'));
-   check(R(rows,'State/Region')===region,'generated state is '+R(rows,'State/Region'));
+   check(R(rows,'State/Region')===key,'generated state is '+R(rows,'State/Region'));
    if(city) check(R(rows,'City')===city&&vals.city===city,'city is '+vals.city); else check(vals.city===R(rows,'City'),'city '+vals.city);
    check(vals.state===stateName,'STATE dropdown = '+vals.state);
  }
+ { console.log('\n== invalid typed state "zz" is rejected, nothing is filled'); const {rows,msg,vals}=await run('us.html','en_US','zz');
+   check(/isn't a state\/region/.test(msg),'message: '+msg.replace(/\n/g,' | ')); check(rows.length===0&&vals.city===''&&vals.firstName==='','preview cleared and form left untouched'); }
  for(const locale of ['de_DE','en_GB','fr_FR','ja_JP']){
    console.log(`\n== plain.html with ${locale}`); const {rows,msg,vals,errs}=await run('plain.html',locale);
    console.log('  popup:',msg.replace(/\n/g,' | ')); check(!errs.length,'no popup errors');

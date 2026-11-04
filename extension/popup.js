@@ -18,9 +18,13 @@ async function copy(t){ try { await navigator.clipboard.writeText(t); return tru
 
 function render(){
   const code = normalize($('loc').value);
-  if (!LOCALES[code]) { msg(`Locale "${$('loc').value}" isn't supported.`, 'err'); return; }
+  if (!LOCALES[code]) { data = null; $('out').innerHTML = ''; $('fill').disabled = true; msg(`Locale "${$('loc').value}" isn't supported.`, 'err'); return; }
   $('loc').value = code;
-  const r = generate(code, $('reg').value), cc = code.slice(-2);
+  const rv = $('reg').value.trim(), region = resolveRegion(code, rv);
+  if (region === null) { data = null; $('out').innerHTML = ''; $('fill').disabled = true;     // never fill stale data after a bad entry
+    msg(`"${rv}" isn't a state/region for ${code}. Try e.g. ${regionsFor(code).slice(0,6).join(', ')}…`, 'err'); return; }
+  $('reg').value = region;
+  const r = generate(code, region), cc = code.slice(-2);
   data = { name:r.f.name, full:r.full, street:r.f.street, city:r.f.city, region:r.f.region, postal:r.f.postal,
            country:r.f.country, countryEn:EN[cc], countryCode:cc, phone:r.phone, tax:r.tax.value, taxLabel:r.tax.label,
            first:r.who.first, last:r.who.last, email:r.who.email };
@@ -178,16 +182,15 @@ async function fillTab(){
 
 for (const code of Object.keys(LOCALES)){ const o = document.createElement('option'); o.value = code; o.label = LOCALES[code].country; $('locs').appendChild(o); }
 function syncRegions(keep){
-  const code = normalize($('loc').value), sel = $('reg');
-  sel.innerHTML = '<option value="">Any state / region</option>';
-  if (!LOCALES[code]) return;
-  const list = regionsFor(code);
-  for (const r of list){ const o = document.createElement('option'); o.value = r; o.textContent = regionLabel(code, r); sel.appendChild(o); }
-  sel.value = list.includes(keep) ? keep : '';
+  const code = normalize($('loc').value);
+  $('regs').innerHTML = '';
+  if (!LOCALES[code]) { $('reg').value = ''; return; }
+  for (const r of regionsFor(code)){ const o = document.createElement('option'); o.value = r; const n = REGION_NAMES[code.slice(-2)+'_'+r]; if (n && n !== r) o.label = n; $('regs').appendChild(o); }
+  $('reg').value = resolveRegion(code, keep || '') || '';
 }
 let lastCode = null;
 $('loc').addEventListener('input', () => { const c = normalize($('loc').value); if (LOCALES[c] && c !== lastCode){ lastCode = c; syncRegions(''); } });
-$('reg').addEventListener('change', render);
+$('reg').addEventListener('keydown', e => { if (e.key === 'Enter') render(); });
 $('gen').addEventListener('click', render);
 $('loc').addEventListener('keydown', e => { if (e.key === 'Enter') render(); });
 $('fill').addEventListener('click', fillTab);

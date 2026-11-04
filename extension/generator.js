@@ -167,6 +167,19 @@ const regionOf = (L, c) => L.style === 'J' ? c[0] : c[1];           // Japan: th
 function regionsFor(code){ const L = LOCALES[code]; return [...new Set(L.cities.map(c => regionOf(L, c)))].sort((a,b) => a.localeCompare(b)); }
 function regionLabel(code, r){ const n = REGION_NAMES[code.slice(-2)+'_'+r]; return n && n !== r ? `${r} — ${n}` : r; }
 
+
+function resolveRegion(code, text){          // '' = any; null = not recognised
+  const q = (text || '').trim(); if (!q) return '';
+  const n = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
+  const nq = n(q); if (!nq) return null;
+  const list = regionsFor(code), cc = code.slice(-2);
+  const names = r => [r, REGION_NAMES[cc+'_'+r], regionLabel(code, r)].filter(Boolean).map(n);
+  let hit = list.filter(r => names(r).includes(nq));                       // NY, ny, "New York", newyork, "NY — New York"
+  if (hit.length === 1) return hit[0];
+  if (nq.length >= 3){ hit = list.filter(r => names(r).some(x => x.startsWith(nq))); if (hit.length === 1) return hit[0]; }  // "wash" -> Washington
+  return null;
+}
+
 /* ---------- people (first/last names by locale) ---------- */
 const NAMES = {
   en:{f:['James','Mary','Robert','Linda','Michael','Sarah','David','Emma','Daniel','Olivia','Thomas','Grace','Henry','Chloe','Samuel','Hannah','Oliver','Megan'],

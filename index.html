@@ -63,7 +63,8 @@
     <form id="f" autocomplete="off">
       <input type="text" id="loc" list="locs" placeholder="Locale, e.g. en_US" aria-label="Locale" value="en_US" spellcheck="false">
       <datalist id="locs"></datalist>
-      <select id="reg" aria-label="State / region"></select>
+      <input type="text" id="reg" list="regs" placeholder="State / region (optional) e.g. NY" aria-label="State / region (optional)" spellcheck="false" autocomplete="off">
+      <datalist id="regs"></datalist>
       <button class="go" type="submit">Generate</button>
     </form>
     <div class="chips" id="chips" role="group" aria-label="Supported locales"></div>
@@ -252,6 +253,19 @@ const regionOf = (L, c) => L.style === 'J' ? c[0] : c[1];           // Japan: th
 function regionsFor(code){ const L = LOCALES[code]; return [...new Set(L.cities.map(c => regionOf(L, c)))].sort((a,b) => a.localeCompare(b)); }
 function regionLabel(code, r){ const n = REGION_NAMES[code.slice(-2)+'_'+r]; return n && n !== r ? `${r} — ${n}` : r; }
 
+
+function resolveRegion(code, text){          // '' = any; null = not recognised
+  const q = (text || '').trim(); if (!q) return '';
+  const n = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
+  const nq = n(q); if (!nq) return null;
+  const list = regionsFor(code), cc = code.slice(-2);
+  const names = r => [r, REGION_NAMES[cc+'_'+r], regionLabel(code, r)].filter(Boolean).map(n);
+  let hit = list.filter(r => names(r).includes(nq));                       // NY, ny, "New York", newyork, "NY — New York"
+  if (hit.length === 1) return hit[0];
+  if (nq.length >= 3){ hit = list.filter(r => names(r).some(x => x.startsWith(nq))); if (hit.length === 1) return hit[0]; }  // "wash" -> Washington
+  return null;
+}
+
 /* ---------- people (first/last names by locale) ---------- */
 const NAMES = {
   en:{f:['James','Mary','Robert','Linda','Michael','Sarah','David','Emma','Daniel','Olivia','Thomas','Grace','Henry','Chloe','Samuel','Hannah','Oliver','Megan'],
@@ -359,7 +373,10 @@ function render(){
   err.textContent = (typed && typed !== code && typed.replace('-','_').toLowerCase() !== code.toLowerCase())
     ? `“${typed}” isn't a listed locale, so I used its country: ${code}.` : '';
   $('loc').value = code;
-  const r = generate(code, $('reg').value); current = {code, r};
+  const rv = $('reg').value.trim(), region = resolveRegion(code, rv);
+  if (region === null){ err.textContent = `“${rv}” isn't a state/region for ${code}. Try e.g. ${regionsFor(code).slice(0,6).join(', ')}…`; return; }
+  $('reg').value = region;
+  const r = generate(code, region); current = {code, r};
   const rows = [
     ['Restaurant', r.f.name], ['Full address', r.full, 'full'], ['Street', r.f.street], ['City', r.f.city],
     ['State / Region', r.f.region], ['Postal code', r.f.postal], ['Country', r.f.country],
@@ -382,15 +399,14 @@ function render(){
 }
 
 function syncRegions(want){
-  const code = normalize($('loc').value), sel = $('reg'), keep = want ?? sel.value;
-  sel.innerHTML = '<option value="">Any state / region</option>';
-  if (!LOCALES[code]) return;
-  for (const r of regionsFor(code)){ const o = document.createElement('option'); o.value = r; o.textContent = regionLabel(code, r); sel.appendChild(o); }
-  sel.value = regionsFor(code).includes(keep) ? keep : '';
+  const code = normalize($('loc').value);
+  $('regs').innerHTML = '';
+  if (!LOCALES[code]) { $('reg').value = ''; return; }
+  for (const r of regionsFor(code)){ const o = document.createElement('option'); o.value = r; const n = REGION_NAMES[code.slice(-2)+'_'+r]; if (n && n !== r) o.label = n; $('regs').appendChild(o); }
+  $('reg').value = resolveRegion(code, want || '') || '';
 }
 let lastCode = null;
 $('loc').addEventListener('input', () => { const c = normalize($('loc').value); if (LOCALES[c] && c !== lastCode){ lastCode = c; syncRegions(''); } });
-$('reg').addEventListener('change', render);
 $('f').addEventListener('submit', e => { e.preventDefault(); render(); });
 $('copyAll').addEventListener('click', async () => {
   if (!current) return; const {r} = current;

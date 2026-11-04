@@ -23,7 +23,7 @@
 <body><div class="w">
   <h1>Restaurant Address Filler</h1>
   <div class="r"><input id="loc" list="locs" value="en_US" spellcheck="false" aria-label="Locale"><datalist id="locs"></datalist></div>
-  <div class="r" style="margin-top:8px"><select id="reg" aria-label="State / region"></select>
+  <div class="r" style="margin-top:8px"><input id="reg" list="regs" placeholder="State / region (optional) e.g. NY" aria-label="State / region (optional)" spellcheck="false" autocomplete="off"><datalist id="regs"></datalist>
     <button class="s" id="gen">Generate</button></div>
   <div id="out"></div>
   <button class="p big" id="fill" disabled>Fill this page</button>

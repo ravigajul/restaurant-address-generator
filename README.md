@@ -2,7 +2,7 @@
 
 Static, client-side tool: enter a locale (`en_US`, `en_AU`, `de_DE`, ...) and get a fresh, unique restaurant name, full address, phone and a format- and checksum-valid VAT / tax ID. Click any field to copy it.
 
-Optional **State / Region** dropdown (changes with the locale) limits the address to cities in that state.
+Optional **State / Region** box limits the address to cities in that state. Type or pick: `NY`, `ny`, `New York`, `newyork`, `ga`, `Georgia`, or a unique prefix like `wash`. Leave it empty for any state.
 Shareable links: `?locale=en_AU` or `?locale=en_US&region=WA`
 
 Supported: en_US en_CA en_GB en_AU en_NZ en_IE en_IN de_DE fr_FR es_ES it_IT nl_NL sv_SE pt_BR ja_JP
