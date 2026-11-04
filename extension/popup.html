@@ -1,0 +1,33 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Restaurant Address Filler</title>
+<style>
+  :root{--bg:#fff;--text:#1c2230;--muted:#6a7385;--line:#e3e6ec;--row:#f1f3f7;--hover:#e8ecf3;--accent:#d9480f;--ink:#fff;--ok:#1b7f4b}
+  @media (prefers-color-scheme:dark){:root{--bg:#1b2029;--text:#e8ebf2;--muted:#9aa3b5;--line:#2b3240;--row:#232a36;--hover:#2b3444;--accent:#ff7a3d;--ink:#1a0e06;--ok:#4cc38a}}
+  body{margin:0;width:380px;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,sans-serif}
+  .w{padding:14px}
+  h1{font-size:15px;margin:0 0 10px}
+  .r{display:flex;gap:8px}
+  input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
+  button{font:inherit;cursor:pointer}
+  .p{padding:8px 12px;border:0;border-radius:8px;background:var(--accent);color:var(--ink);font-weight:600}
+  .s{padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--text)}
+  .big{width:100%;margin-top:10px;padding:10px;font-size:15px}
+  .f{display:flex;gap:8px;width:100%;text-align:left;margin:6px 0 0;padding:7px 10px;border:1px solid transparent;border-radius:8px;background:var(--row);color:var(--text)}
+  .f:hover{background:var(--hover)} .f.done{border-color:var(--ok)}
+  .k{flex:0 0 84px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding-top:2px}
+  .v{flex:1;word-break:break-word}
+  #msg{min-height:18px;margin-top:8px;font-size:12.5px;color:var(--muted)} #msg.ok{color:var(--ok)} #msg.err{color:#c92a2a}
+  .hint{font-size:11px;color:var(--muted);margin-top:4px}
+</style></head>
+<body><div class="w">
+  <h1>Restaurant Address Filler</h1>
+  <div class="r"><input id="loc" list="locs" value="en_US" spellcheck="false" aria-label="Locale"><datalist id="locs"></datalist>
+    <button class="s" id="gen">Generate</button></div>
+  <div id="out"></div>
+  <button class="p big" id="fill" disabled>Fill this page</button>
+  <div id="msg" role="status"></div>
+  <div class="hint">Click a row to copy it. Fields are matched by autocomplete / name / label text.</div>
+</div>
+<script src="generator.js"></script>
+<script src="popup.js"></script>
+</body></html>
