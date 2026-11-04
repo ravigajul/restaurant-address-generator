@@ -5,7 +5,7 @@ const rnd = n => { const a = new Uint32Array(1); crypto.getRandomValues(a); retu
 const pick = a => a[rnd(a.length)];
 const digits = n => Array.from({length:n}, () => rnd(10)).join('');
 const SAFE = 'ABCEGHJKLMNPRSTVWXYZ';
-const fill = p => p.replace(/[#@$]/g, c => c==='#' ? rnd(10) : c==='@' ? String.fromCharCode(65+rnd(26)) : SAFE[rnd(SAFE.length)]);
+const fill = p => p.replace(/[#@$%]/g, c => c==='#' ? rnd(10) : c==='%' ? 2+rnd(8) : c==='@' ? String.fromCharCode(65+rnd(26)) : SAFE[rnd(SAFE.length)]);
 const num = (lo,hi) => lo + rnd(hi-lo+1);
 
 /* ---------- checksum helpers ---------- */
@@ -70,61 +70,86 @@ const enName = () => rnd(3)===0 ? `The ${pick(W.en_adj)} ${pick(W.en_noun)}` : `
 const enStreetNames = ['Main','Oak','Maple','Cedar','Elm','Park','Lake','Hill','Sunset','River','Church','High','Market','Station','King','Queen','Mill','Spring','Willow','Ridge','Harbour','Bridge','Garden','Victoria','Albert','George','Jefferson','Lincoln'];
 
 const LOCALES = {
-  en_US:{ country:'United States', tax:'US', style:'A', phone:'+1 ### 555 01##',
+  en_US:{ country:'United States', tax:'US', style:'A', phone:'%## 555 01##',
     name:enName, street:()=>`${num(1,9899)} ${pick(enStreetNames)} ${pick(['St','Ave','Blvd','Rd','Dr','Ln','Way'])}${rnd(4)===0?`, Suite ${num(100,950)}`:''}`,
     cities:[['New York','NY','100##'],['Los Angeles','CA','900##'],['Chicago','IL','606##'],['Houston','TX','770##'],['Seattle','WA','981##'],['Miami','FL','331##'],['Denver','CO','802##'],['Boston','MA','021##'],['Austin','TX','787##'],['Atlanta','GA','303##']] },
-  en_CA:{ country:'Canada', tax:'CA', style:'A', phone:'+1 ### 555 01##',
+  en_CA:{ country:'Canada', tax:'CA', style:'A', phone:'%## 555 01##',
     name:enName, street:()=>`${num(1,9899)} ${pick(enStreetNames)} ${pick(['St','Ave','Blvd','Rd','Dr','Cres'])}`,
     cities:[['Toronto','ON','M5$ #$#'],['Vancouver','BC','V6$ #$#'],['Montréal','QC','H2$ #$#'],['Calgary','AB','T2$ #$#'],['Ottawa','ON','K1$ #$#'],['Winnipeg','MB','R3$ #$#']] },
-  en_GB:{ country:'United Kingdom', tax:'GB', style:'C', phone:'+44 20 7946 0###',
+  en_GB:{ country:'United Kingdom', tax:'GB', style:'C', phone:'020 7946 0###',
     name:enName, street:()=>`${num(1,240)} ${pick(enStreetNames)} ${pick(['Street','Road','Lane','Close','Way','Gardens','Row'])}`,
     cities:[['London','England','EC# #$$'],['Manchester','England','M## #$$'],['Birmingham','England','B## #$$'],['Edinburgh','Scotland','EH# #$$'],['Bristol','England','BS# #$$'],['Leeds','England','LS# #$$'],['Cardiff','Wales','CF# #$$']] },
-  en_AU:{ country:'Australia', tax:'AU', style:'B', phone:'+61 2 5550 ####',
+  en_AU:{ country:'Australia', tax:'AU', style:'B', phone:'02 5550 ####',
     name:enName, street:()=>`${rnd(3)===0?`Shop ${num(1,30)}/`:''}${num(1,420)} ${pick(enStreetNames)} ${pick(['Street','Road','Avenue','Lane','Parade','Terrace','Place'])}`,
     cities:[['Sydney','NSW','20##'],['Melbourne','VIC','30##'],['Brisbane','QLD','40##'],['Perth','WA','60##'],['Adelaide','SA','50##'],['Hobart','TAS','70##'],['Canberra','ACT','26##']] },
-  en_NZ:{ country:'New Zealand', tax:'NZ', style:'C', phone:'+64 9 555 ####',
+  en_NZ:{ country:'New Zealand', tax:'NZ', style:'C', phone:'09 555 ####',
     name:enName, street:()=>`${num(1,300)} ${pick(enStreetNames)} ${pick(['Street','Road','Avenue','Lane','Drive'])}`,
     cities:[['Auckland','Auckland','10##'],['Wellington','Wellington','60##'],['Christchurch','Canterbury','80##'],['Hamilton','Waikato','32##'],['Dunedin','Otago','90##']] },
-  en_IE:{ country:'Ireland', tax:'IE', style:'C', phone:'+353 1 555 ####',
+  en_IE:{ country:'Ireland', tax:'IE', style:'C', phone:'01 555 ####',
     name:enName, street:()=>`${num(1,150)} ${pick(['Main','Church','Castle','Bridge','Market','Quay','Patrick','Mill','Abbey'])} ${pick(['Street','Road','Lane','Quay','Avenue'])}`,
     cities:[['Dublin','Leinster','D0# $#$#'],['Cork','Munster','T12 $#$#'],['Galway','Connacht','H91 $#$#'],['Limerick','Munster','V94 $#$#']] },
-  en_IN:{ country:'India', tax:'IN', style:'A', phone:'+91 9#### #####',
+  en_IN:{ country:'India', tax:'IN', style:'A', phone:'9#### #####',
     name:()=>pick(['Spice Route','Tandoor Palace','Curry Leaf','Masala Junction','Saffron Table','Dosa Corner','Biryani House','Chaat Street','Royal Thali','Mirch Masala']),
     street:()=>`Shop No. ${num(1,120)}, ${pick(['MG','Station','Gandhi','Nehru','Temple','Market','Linking','Residency','Brigade','Church'])} ${pick(['Road','Marg','Street','Chowk'])}`,
     cities:[['Mumbai','Maharashtra','400###','27'],['Delhi','Delhi','110###','07'],['Bengaluru','Karnataka','560###','29'],['Chennai','Tamil Nadu','600###','33'],['Hyderabad','Telangana','500###','36'],['Pune','Maharashtra','411###','27']] },
-  de_DE:{ country:'Deutschland', tax:'DE', style:'D', phone:'+49 30 555####',
+  de_DE:{ country:'Deutschland', tax:'DE', style:'D', phone:'030 555####',
     name:()=>pick(['Gasthaus Zum Goldenen Löwen','Zur Linde','Brauhaus am Markt','Ristorante Da Mario','Weinstube Hirsch','Landhaus Eichenhof','Zum Alten Fritz','Gaststätte Lindenhof','Restaurant Rheinblick','Zur Krone']),
     street:()=>`${pick(['Haupt','Bahnhof','Schiller','Goethe','Linden','Garten','Kirch','Markt','Berg','Wald','Mühlen','Rosen'])}${pick(['straße','weg','platz','allee'])} ${num(1,150)}`,
     cities:[['Berlin','Berlin','10###'],['München','Bayern','80###'],['Hamburg','Hamburg','20###'],['Köln','Nordrhein-Westfalen','50###'],['Frankfurt am Main','Hessen','60###'],['Stuttgart','Baden-Württemberg','70###']] },
-  fr_FR:{ country:'France', tax:'FR', style:'D', phone:'+33 1 ## ## ## ##',
+  fr_FR:{ country:'France', tax:'FR', style:'D', phone:'01 ## ## ## ##',
     name:()=>pick(['Le Petit Bistro','Chez Marcel','La Belle Époque','Le Comptoir','Brasserie du Coin','Au Bon Vivant','La Table de Julie','Le Coq Gaulois','L’Escargot Doré','Café des Arts']),
     street:()=>`${num(1,180)} ${pick(['Rue','Avenue','Boulevard','Place','Quai','Allée'])} ${pick(['Victor Hugo','de la République','de la Paix','Pasteur','Jean Jaurès','des Lilas','du Marché','Gambetta','de Verdun','Voltaire'])}`,
     cities:[['Paris','Île-de-France','750##'],['Lyon','Auvergne-Rhône-Alpes','690##'],['Marseille','Provence-Alpes-Côte d’Azur','130##'],['Toulouse','Occitanie','310##'],['Nice','Provence-Alpes-Côte d’Azur','060##'],['Bordeaux','Nouvelle-Aquitaine','330##']] },
-  es_ES:{ country:'España', tax:'ES', style:'D', phone:'+34 91 ### ## ##',
+  es_ES:{ country:'España', tax:'ES', style:'D', phone:'91 ### ## ##',
     name:()=>pick(['Casa Pepe','La Taberna del Sol','El Rincón de Juan','Bar La Plaza','Mesón El Toro','Casa Lola','La Cantina','El Jardín Secreto','Asador Los Arcos','Tapas y Vino']),
     street:()=>`${pick(['Calle','Avenida','Plaza','Paseo'])} ${pick(['Mayor','de Cervantes','del Sol','de la Constitución','Real','de Goya','de los Olivos','San Antonio','de Alcalá','Colón'])}, ${num(1,150)}`,
     cities:[['Madrid','Madrid','280##'],['Barcelona','Cataluña','080##'],['Valencia','Comunidad Valenciana','460##'],['Sevilla','Andalucía','410##'],['Bilbao','País Vasco','480##']] },
-  it_IT:{ country:'Italia', tax:'IT', style:'E', phone:'+39 06 ### ####',
+  it_IT:{ country:'Italia', tax:'IT', style:'E', phone:'06 ### ####',
     name:()=>pick(['Trattoria da Luigi','Osteria La Luna','Ristorante Il Girasole','Pizzeria Napoli','La Dolce Vita','Da Gennaro','Taverna del Borgo','Antica Locanda','Il Pomodoro','Enoteca Bella Vista']),
     street:()=>`${pick(['Via','Viale','Piazza','Corso','Vicolo'])} ${pick(['Roma','Garibaldi','Dante Alighieri','Mazzini','Verdi','Cavour','Marconi','Manzoni','Leonardo da Vinci','della Libertà'])}, ${num(1,150)}`,
     cities:[['Roma','RM','001##'],['Milano','MI','201##'],['Napoli','NA','801##'],['Torino','TO','101##'],['Firenze','FI','501##']] },
-  nl_NL:{ country:'Nederland', tax:'NL', style:'D', phone:'+31 20 555 ####',
+  nl_NL:{ country:'Nederland', tax:'NL', style:'D', phone:'020 555 ####',
     name:()=>pick(['Eetcafé De Gouden Leeuw','Restaurant De Molen','Brasserie Het Hoekje','Grand Café De Kroon','De Tulp','Smaak aan de Gracht','Bistro De Vier Seizoenen','Het Witte Huis','Eethuis Noord','De Haven']),
     street:()=>`${pick(['Kerk','Dam','Molen','Haven','Nieuwe','Oude','Markt','Beurs','Linden','Station','Kade','School'])}${pick(['straat','laan','weg','plein','gracht'])} ${num(1,200)}`,
     cities:[['Amsterdam','Noord-Holland','10## @@'],['Rotterdam','Zuid-Holland','30## @@'],['Utrecht','Utrecht','35## @@'],['Den Haag','Zuid-Holland','25## @@'],['Eindhoven','Noord-Brabant','56## @@']] },
-  sv_SE:{ country:'Sverige', tax:'SE', style:'D', phone:'+46 8 555 ## ###',
+  sv_SE:{ country:'Sverige', tax:'SE', style:'D', phone:'08 555 ## ###',
     name:()=>pick(['Restaurang Smak','Krogen Björken','Bistro Norden','Matsalen','Café Fika','Kök & Bar Havet','Gastro Stockholm','Wärdshuset Ekan','Matbaren','Smörgåsen']),
     street:()=>`${pick(['Stor','Drottning','Kung','Kyrk','Järn','Skol','Vasa','Hamn','Bergs','Ringvägen'])}${pick(['gatan','vägen','torget','allén'])} ${num(1,140)}`,
     cities:[['Stockholm','Stockholms län','11# ##'],['Göteborg','Västra Götaland','41# ##'],['Malmö','Skåne','21# ##'],['Uppsala','Uppsala län','75# ##']] },
-  pt_BR:{ country:'Brasil', tax:'BR', style:'F', phone:'+55 11 9####-####',
+  pt_BR:{ country:'Brasil', tax:'BR', style:'F', phone:'11 9####-####',
     name:()=>pick(['Churrascaria Boi Gordo','Cantinho do Sabor','Restaurante Sabor da Terra','Bar do Zé','Casa da Feijoada','Pizzaria Bella Massa','Fogão de Lenha','Sabor Mineiro','Cozinha da Vovó','Mar & Brasa']),
     street:()=>`${pick(['Rua','Avenida','Travessa','Alameda'])} ${pick(['das Flores','Sete de Setembro','Brasil','XV de Novembro','Paulista','dos Andradas','Getúlio Vargas','das Palmeiras','Tiradentes','São João'])}, ${num(1,2500)}`,
     cities:[['São Paulo','SP','01###-###'],['Rio de Janeiro','RJ','20###-###'],['Brasília','DF','70###-###'],['Curitiba','PR','80###-###'],['Belo Horizonte','MG','30###-###']] },
-  ja_JP:{ country:'日本', tax:'JP', style:'J', phone:'+81 3-####-####',
+  ja_JP:{ country:'日本', tax:'JP', style:'J', phone:'03-####-####',
     name:()=>pick(['炉端 鳥吉','寿司 匠','ラーメン 一番','居酒屋 まる','天ぷら 華','焼肉 大楽','そば処 藤','串焼き とり正','うなぎ 松葉','カフェ 桜']),
     street:()=>`${pick(['中央','本町','栄','駅前','新町','道玄坂','銀座','神田','桜木','港'])}${num(1,6)}-${num(1,30)}-${num(1,20)}`,
     cities:[['東京都','渋谷区','1##-####'],['東京都','新宿区','16#-####'],['大阪府','大阪市北区','53#-####'],['京都府','京都市中京区','60#-####'],['北海道','札幌市中央区','06#-####']] },
 };
+
+
+/* ---------- people (first/last names by locale) ---------- */
+const NAMES = {
+  en:{f:['James','Mary','Robert','Linda','Michael','Sarah','David','Emma','Daniel','Olivia','Thomas','Grace','Henry','Chloe','Samuel','Hannah','Oliver','Megan'],
+      l:['Smith','Johnson','Brown','Taylor','Wilson','Anderson','Walker','Hall','Young','Clarke','Turner','Hughes','Morgan','Bennett','Cooper','Reed']},
+  ie:{f:['Seán','Aoife','Ciarán','Niamh','Conor','Siobhán','Cian','Orla'],l:['Murphy','Kelly','O’Brien','Walsh','Byrne','Ryan','Doyle','McCarthy']},
+  in:{f:['Aarav','Priya','Rohan','Ananya','Vikram','Neha','Arjun','Kavya','Rahul','Sneha'],l:['Sharma','Patel','Reddy','Iyer','Gupta','Nair','Mehta','Singh','Rao','Kapoor']},
+  de:{f:['Lukas','Anna','Felix','Laura','Jonas','Marie','Maximilian','Lena','Paul','Julia'],l:['Müller','Schmidt','Schneider','Fischer','Weber','Becker','Wagner','Hoffmann','Koch','Richter']},
+  fr:{f:['Louis','Camille','Hugo','Léa','Lucas','Chloé','Gabriel','Manon','Arthur','Inès'],l:['Martin','Bernard','Dubois','Moreau','Laurent','Lefebvre','Girard','Roux','Fournier','Mercier']},
+  es:{f:['Carlos','Lucía','Javier','Marta','Diego','Carmen','Pablo','Elena','Sergio','Paula'],l:['García','Fernández','López','Martínez','Sánchez','Pérez','Gómez','Ruiz','Díaz','Moreno']},
+  it:{f:['Luca','Giulia','Marco','Sofia','Matteo','Chiara','Alessandro','Francesca','Davide','Elena'],l:['Rossi','Russo','Ferrari','Esposito','Bianchi','Romano','Colombo','Ricci','Marino','Greco']},
+  nl:{f:['Daan','Emma','Sem','Sanne','Lars','Fleur','Bram','Lotte','Thijs','Noor'],l:['de Jong','Jansen','de Vries','van den Berg','Bakker','Visser','Smit','Meijer','Mulder','de Boer']},
+  sv:{f:['Erik','Maja','Oskar','Elsa','Axel','Ebba','Lars','Astrid','Nils','Freja'],l:['Andersson','Johansson','Karlsson','Nilsson','Eriksson','Larsson','Olsson','Persson','Svensson','Gustafsson']},
+  pt:{f:['João','Maria','Pedro','Ana','Lucas','Beatriz','Rafael','Camila','Gustavo','Juliana'],l:['Silva','Santos','Oliveira','Souza','Pereira','Costa','Rodrigues','Almeida','Nascimento','Lima']},
+  ja:{f:['太郎','花子','健太','美咲','大輔','陽子','翔','愛','直樹','由美'],l:['佐藤','鈴木','高橋','田中','伊藤','渡辺','山本','中村','小林','加藤']},
+};
+const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it_IT:'it', nl_NL:'nl', sv_SE:'sv', pt_BR:'pt', ja_JP:'ja'};
+const ascii = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z]/g,'').toLowerCase();
+function person(code){
+  const n = NAMES[NAME_SET[code] || 'en'], first = pick(n.f), last = pick(n.l);
+  const a = ascii(first), b = ascii(last);
+  const email = (a && b ? `${a}.${b}` : `guest${digits(4)}`) + num(10,99) + '@example.com';  // example.com is reserved for documentation
+  return { first, last, email };
+}
 
 /* ---------- address assembly ---------- */
 function assemble(L, f){
@@ -148,12 +173,13 @@ function generate(code){
     const f = { name: L.name(), street: L.street(), city, region:'', postal: fill(c[2]), country: L.country };
     if (L.style === 'J'){ f.city = c[0]; f.region = c[1]; } else f.region = c[1];
     const tax = TAX[L.tax]({gst:c[3]});
-    const phone = fill(L.phone.replace(/#/g,'#'));
+    const phone = fill(L.phone).replace(/\D/g,'');   // national number, digits only (no country code)
     const full = assemble(L, f);
-    const key = f.name + full + tax.value;
+    const who = person(code);
+    const key = f.name + full + tax.value + who.email;
     if (seen.has(key)) continue;
     seen.add(key);
-    return { f, tax, phone, full };
+    return { f, tax, phone, full, who };
   }
   throw new Error('Could not produce a unique result');
 }
