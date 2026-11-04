@@ -95,7 +95,8 @@ It calls the browser's original setter and then fires the events a real keystrok
 Everything runs in the browser, with no backend.
 
 - **Uniqueness:** random values come from `crypto.getRandomValues`, and a session `Set` rejects any repeat.
-- **Addresses:** a real city, a postcode in that city's range, and a random street in the locale's format.
+- **Addresses:** a real city, a real postcode for that city, and a random street in the locale's format.
+- **Postcodes:** `POSTAL` holds curated real codes per city. US, AU, NZ, IN, DE, FR, ES, IT, SE, JP use real full codes. UK, Canada, Ireland, NL and BR use real districts or prefixes with a format-valid ending (UK `#^^` inward letters, Canadian `#$#` without D F I O Q U, Eircode `&###`, Dutch letters never SA/SD/SS). `tests/postal.js` checks every generated code against each country's official regex.
 - **Tax IDs:** they follow each country's real format and check-digit rule (Luhn, mod 11, mod 97, and so on), so they pass format validators. They are not registered to any business, so they are for testing only.
 - **Phone:** national digits only, with no country code.
 - **Email:** `first.last##@example.com`. The `example.com` domain is reserved for documentation, so mail never reaches a real inbox.
