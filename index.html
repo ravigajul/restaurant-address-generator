@@ -269,8 +269,14 @@ function bindCopy(btn, label, text){
 
 let current = null;
 function normalize(s){
-  const m = s.trim().replace('-', '_').match(/^([a-zA-Z]{2})_([a-zA-Z]{2})$/);
-  return m ? m[1].toLowerCase()+'_'+m[2].toUpperCase() : s.trim();
+  s = s.trim().replace('-', '_');
+  let m = s.match(/^([a-zA-Z]{2})_([a-zA-Z]{2})$/);
+  const code = m ? m[1].toLowerCase()+'_'+m[2].toUpperCase() : (/^[a-zA-Z]{2}$/.test(s) ? '_'+s.toUpperCase() : s);
+  if (LOCALES[code]) return code;
+  // Fall back to the country part: en_IT -> it_IT, bare "IT" -> it_IT
+  const region = code.slice(-2).toUpperCase();
+  const hit = /^([a-z]{2})?_?[a-z]{2}$/i.test(code) && Object.keys(LOCALES).find(k => k.endsWith('_'+region));
+  return hit || code;
 }
 function render(){
   const code = normalize($('loc').value);
@@ -279,7 +285,9 @@ function render(){
     err.textContent = `Locale “${$('loc').value}” isn't supported. Pick one of the chips below.`;
     return;
   }
-  err.textContent = '';
+  const typed = $('loc').value.trim();
+  err.textContent = (typed && typed !== code && typed.replace('-','_').toLowerCase() !== code.toLowerCase())
+    ? `“${typed}” isn't a listed locale, so I used its country: ${code}.` : '';
   $('loc').value = code;
   const r = generate(code); current = {code, r};
   const rows = [
