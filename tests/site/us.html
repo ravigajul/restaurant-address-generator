@@ -1,0 +1,23 @@
+<!doctype html><html><body><h3>US-style application</h3><form>
+<label for=fn>First Name</label><input id=fn name=firstName>
+<label for=ln>Last Name</label><input id=ln name=lastName>
+<label for=em>Email</label><input id=em type=email name=email>
+<label for=ph>Phone</label><input id=ph type=tel name=phone>
+<label for=bn>Restaurant / Business Name</label><input id=bn name=businessName>
+<label for=a1>Street Address</label><input id=a1 name=address1 autocomplete="address-line1">
+<label for=a2>Apt / Suite</label><input id=a2 name=address2>
+<label for=ct>City</label><input id=ct name=city>
+<label for=st>State</label><select id=st name=state><option value="">-- Select --</option></select>
+<label for=zp>ZIP Code</label><input id=zp name=zip>
+<label for=co>Country</label><select id=co name=country><option value="">-- Select --</option>
+<option value=AU>Australia</option><option value=CA>Canada</option><option value=GB>United Kingdom</option><option value=DE>Germany</option><option value=FR>France</option><option value=IT>Italy</option><option value=US>United States</option></select>
+<label for=tx>EIN / Tax ID</label><input id=tx name=taxId>
+</form>
+<script>
+// state list loads only after a country is chosen (async), like many real apps
+const S={US:[['NY','New York'],['CA','California'],['IL','Illinois'],['TX','Texas'],['WA','Washington'],['FL','Florida'],['CO','Colorado'],['MA','Massachusetts'],['GA','Georgia']],
+ AU:[['NSW','New South Wales'],['VIC','Victoria'],['QLD','Queensland'],['WA','Western Australia'],['SA','South Australia'],['TAS','Tasmania'],['ACT','Australian Capital Territory']],
+ CA:[['ON','Ontario - ON'],['BC','British Columbia'],['QC','Quebec'],['AB','Alberta'],['MB','Manitoba']]};
+document.getElementById('co').addEventListener('change',e=>{const s=document.getElementById('st');s.length=1;
+ setTimeout(()=>{(S[e.target.value]||[]).forEach(([v,t],i)=>{const o=document.createElement('option');o.value=String(i+100);o.textContent=t;s.appendChild(o)})},350)});
+</script></body></html>

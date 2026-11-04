@@ -8,12 +8,21 @@ Supported: en_US en_CA en_GB en_AU en_NZ en_IE en_IN de_DE fr_FR es_ES it_IT nl_
 
 Test data only. Addresses are fictional and tax IDs are not registered to any business.
 
-## Chrome extension
+## Browser extension (Chrome and Edge)
 
-`extension/` is a Manifest V3 extension that generates an address for a locale and fills it into the open page's form fields
-(matched by `autocomplete`, name, id, placeholder and label text; works with React/Vue forms; skips first/last/email/etc.).
+`extension/` is a Manifest V3 extension for Chromium browsers — it works in **Google Chrome and Microsoft Edge** (and Brave etc.).
+It generates details for a locale and fills them into the open page: first/last name, email (`@example.com`), phone (national
+number, no country code), restaurant name, street, city, state/region, postal code, country and tax ID. Dropdowns are selected
+(it waits for state lists that load after the country is chosen); first/last/email style fields are matched by `autocomplete`,
+name, id, placeholder and label text. React/Vue forms are supported.
 
-Install: download this repo (Code > Download ZIP), unzip, open `chrome://extensions`, enable **Developer mode**,
-click **Load unpacked** and pick the `extension` folder. Pin it, open a form, click the icon, **Generate**, then **Fill this page**.
+**Install** — download `restaurant-address-filler-extension.zip` from this repo and unzip it (or use `extension/` directly), then:
+- Chrome: open `chrome://extensions`, enable **Developer mode**, **Load unpacked**, pick the folder.
+- Edge: open `edge://extensions`, enable **Developer mode**, **Load unpacked**, pick the folder.
 
-If you change the generator in `index.html`, run `./build-extension.sh` to sync `extension/generator.js`.
+Pin it, open the form page, click the icon, **Generate**, then **Fill this page**.
+
+**Tests** — `cd tests && npm i && npm test` launches real Chrome with the extension and fills two test forms across 8 locales.
+Set `BROWSER=/path/to/msedge` to run the same suite in Edge.
+
+If you change the generator in `index.html`, run `./build-extension.sh` (syncs `extension/generator.js` and rebuilds the zip).
