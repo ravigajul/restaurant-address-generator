@@ -99,6 +99,7 @@ Everything runs in the browser, with no backend.
 - **Tax IDs:** they follow each country's real format and check-digit rule (Luhn, mod 11, mod 97, and so on), so they pass format validators. They are not registered to any business, so they are for testing only.
 - **Phone:** national digits only, with no country code.
 - **Email:** `first.last##@example.com`. The `example.com` domain is reserved for documentation, so mail never reaches a real inbox.
+- **State / region:** `generate(code, region)` filters the locale's city list to that region (`regionOf` treats the prefecture as the region for Japan). `EXTRA_CITIES` supplies extra cities so most states have an entry, and `REGION_NAMES` maps abbreviations to full names (`US_NY` → New York) for labels and for dropdowns that list full names.
 - **Locale lookup:** `en_IT` falls back to the country part, `it_IT`.
 
 ## 7. Testing
@@ -118,5 +119,6 @@ The test uses a temporary copy of the extension with one extra host permission f
 - **Debug the popup:** right-click inside it, then Inspect.
 - **Debug the injected code:** use the page's own DevTools console, because that is where `fillPage` runs.
 - **Add a field type:** add an entry to the `rules` array in `fillPage`, and a value in `values`.
+- **Add a city or state:** add a `[city, region, postcode-pattern]` row to `EXTRA_CITIES` (and a `REGION_NAMES` entry if the region is an abbreviation).
 - **Add a locale:** add an entry to `LOCALES` in `index.html` (cities, street format, phone pattern, tax generator), add its country to `EN` in `popup.js`, then run `./build-extension.sh`.
 - **Auto-fill on chosen sites:** declare a `content_scripts` entry in the manifest. That needs a broader permission prompt, which is why this project uses the click-to-fill `activeTab` approach.

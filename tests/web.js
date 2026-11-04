@@ -1,0 +1,20 @@
+const puppeteer=require('puppeteer-core'),http=require('http'),fs=require('fs');
+const srv=http.createServer((q,r)=>{r.setHeader('content-type','text/html');r.end(fs.readFileSync(require('path').join(__dirname,'..','index.html')))}).listen(0);
+const P=srv.address().port; let fails=0; const ck=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m);if(!c)fails++};
+(async()=>{
+ const b=await puppeteer.launch({executablePath:process.env.BROWSER||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,userDataDir:fs.mkdtempSync('/tmp/pw-')});
+ const pg=await b.newPage(); const errs=[]; pg.on('pageerror',e=>errs.push(e.message));
+ await pg.goto(`http://127.0.0.1:${P}/?locale=en_AU&region=WA`);
+ const get=()=>pg.$$eval('.field',els=>Object.fromEntries(els.map(e=>[e.children[0].textContent,e.children[1].textContent])));
+ let v=await get(); ck(v['City']==='Perth'&&v['State / Region']==='WA','URL region=WA -> '+v['City']+' '+v['State / Region']);
+ ck(await pg.$eval('#reg',e=>e.options.length)===9,'AU has 8 regions + Any');
+ await pg.$eval('#loc',e=>{e.value='en_US';e.dispatchEvent(new Event('input'))});
+ ck(await pg.$eval('#reg',e=>e.value)===''&&await pg.$eval('#reg',e=>e.options.length)>20,'switching to en_US repopulates states, resets to Any');
+ await pg.select('#reg','NY'); v=await get(); ck(v['State / Region']==='NY'&&/^(New York|Buffalo)$/.test(v['City']),'pick NY -> '+v['City']);
+ const seen=new Set(); for(let i=0;i<8;i++){await pg.click('button.go');seen.add((await get())['Full address'])} ck(seen.size===8,'8 clicks -> 8 unique addresses');
+ await pg.evaluate(()=>{navigator.clipboard.writeText=async()=>{}}); await pg.click('.field.full'); 
+ ck(await pg.$eval('#toast',e=>e.classList.contains('show')&&/Copied/.test(e.textContent)),'copy shows toast');
+ ck(await pg.$eval('.field.full .hint',e=>/Copied/.test(e.textContent)),'row shows Copied ✓');
+ ck(pg.url().includes('region=NY'),'URL updated with region'); ck(!errs.length,'no page errors '+errs);
+ await b.close(); srv.close(); console.log(fails?'FAILURES':'WEB ALL PASSED');
+})();

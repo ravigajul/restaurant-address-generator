@@ -7,6 +7,7 @@
   .w{padding:14px}
   h1{font-size:15px;margin:0 0 10px}
   .r{display:flex;gap:8px}
+  select{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
   input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
   button{font:inherit;cursor:pointer}
   .p{padding:8px 12px;border:0;border-radius:8px;background:var(--accent);color:var(--ink);font-weight:600}
@@ -21,7 +22,8 @@
 </style></head>
 <body><div class="w">
   <h1>Restaurant Address Filler</h1>
-  <div class="r"><input id="loc" list="locs" value="en_US" spellcheck="false" aria-label="Locale"><datalist id="locs"></datalist>
+  <div class="r"><input id="loc" list="locs" value="en_US" spellcheck="false" aria-label="Locale"><datalist id="locs"></datalist></div>
+  <div class="r" style="margin-top:8px"><select id="reg" aria-label="State / region"></select>
     <button class="s" id="gen">Generate</button></div>
   <div id="out"></div>
   <button class="p big" id="fill" disabled>Fill this page</button>

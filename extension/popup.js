@@ -3,10 +3,6 @@
 const $ = id => document.getElementById(id);
 const EN = { US:'United States', CA:'Canada', GB:'United Kingdom', AU:'Australia', NZ:'New Zealand', IE:'Ireland', IN:'India',
   DE:'Germany', FR:'France', ES:'Spain', IT:'Italy', NL:'Netherlands', SE:'Sweden', BR:'Brazil', JP:'Japan' };
-const STATES = { // abbreviation -> full name (for dropdowns that list full names)
-  NY:'New York',CA:'California',IL:'Illinois',TX:'Texas',WA:'Washington',FL:'Florida',CO:'Colorado',MA:'Massachusetts',GA:'Georgia',
-  ON:'Ontario',BC:'British Columbia',QC:'Quebec',AB:'Alberta',MB:'Manitoba',
-  NSW:'New South Wales',VIC:'Victoria',QLD:'Queensland',WA_AU:'Western Australia',SA:'South Australia',TAS:'Tasmania',ACT:'Australian Capital Territory' };
 let data = null;
 
 function normalize(s){
@@ -24,7 +20,7 @@ function render(){
   const code = normalize($('loc').value);
   if (!LOCALES[code]) { msg(`Locale "${$('loc').value}" isn't supported.`, 'err'); return; }
   $('loc').value = code;
-  const r = generate(code), cc = code.slice(-2);
+  const r = generate(code, $('reg').value), cc = code.slice(-2);
   data = { name:r.f.name, full:r.full, street:r.f.street, city:r.f.city, region:r.f.region, postal:r.f.postal,
            country:r.f.country, countryEn:EN[cc], countryCode:cc, phone:r.phone, tax:r.tax.value, taxLabel:r.tax.label,
            first:r.who.first, last:r.who.last, email:r.who.email };
@@ -41,7 +37,7 @@ function render(){
     $('out').appendChild(b);
   }
   $('fill').disabled = false; msg('');
-  chrome.storage.local.set({ locale: code });
+  chrome.storage.local.set({ locale: code, region: $('reg').value });
 }
 
 /* Runs INSIDE the page (all frames). Must be fully self-contained. */
@@ -109,7 +105,7 @@ async function fillPage(d, states){
     el.dispatchEvent(new Event('blur',   { bubbles:true }));
   };
   const wantsFor = key => key === 'country' ? [d.countryCode, d.countryEn, d.country]
-    : key === 'region' ? [d.region, (d.countryCode === 'AU' && states[d.region + '_AU']) || states[d.region], d.region]
+    : key === 'region' ? [d.region, states[d.countryCode + '_' + d.region], d.region]
     : [d.city];
   // loose match: exact value/text, "NY - New York", "New York (NY)", or full-name containment
   const matchOpt = (cands, wants) => {
@@ -172,7 +168,7 @@ async function fillTab(){
     if (!tab || /^(chrome|edge|about|chrome-extension):/.test(tab.url || '') || /chromewebstore\.google\.com/.test(tab.url || ''))
       return msg("Chrome doesn't allow extensions on this page. Open a normal website tab.", 'err');
     msg('Filling…');
-    const res = await chrome.scripting.executeScript({ target:{ tabId:tab.id, allFrames:true }, func:fillPage, args:[data, STATES] });
+    const res = await chrome.scripting.executeScript({ target:{ tabId:tab.id, allFrames:true }, func:fillPage, args:[data, REGION_NAMES] });
     const keys = res.flatMap(r => r.result?.filled || []);
     const notes = [...new Set(res.flatMap(r => r.result?.notes || []))];
     const base = keys.length ? `Filled ${keys.length} field${keys.length>1?'s':''}: ${[...new Set(keys)].join(', ')}` : 'No matching fields found on this page.';
@@ -181,8 +177,19 @@ async function fillTab(){
 }
 
 for (const code of Object.keys(LOCALES)){ const o = document.createElement('option'); o.value = code; o.label = LOCALES[code].country; $('locs').appendChild(o); }
+function syncRegions(keep){
+  const code = normalize($('loc').value), sel = $('reg');
+  sel.innerHTML = '<option value="">Any state / region</option>';
+  if (!LOCALES[code]) return;
+  const list = regionsFor(code);
+  for (const r of list){ const o = document.createElement('option'); o.value = r; o.textContent = regionLabel(code, r); sel.appendChild(o); }
+  sel.value = list.includes(keep) ? keep : '';
+}
+let lastCode = null;
+$('loc').addEventListener('input', () => { const c = normalize($('loc').value); if (LOCALES[c] && c !== lastCode){ lastCode = c; syncRegions(''); } });
+$('reg').addEventListener('change', render);
 $('gen').addEventListener('click', render);
 $('loc').addEventListener('keydown', e => { if (e.key === 'Enter') render(); });
 $('fill').addEventListener('click', fillTab);
-chrome.storage.local.get('locale', ({ locale }) => { if (locale) $('loc').value = locale; render(); });
+chrome.storage.local.get(['locale','region'], ({ locale, region }) => { if (locale) $('loc').value = locale; lastCode = normalize($('loc').value); syncRegions(region || ''); render(); });
 })();

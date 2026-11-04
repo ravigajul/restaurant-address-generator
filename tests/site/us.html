@@ -15,9 +15,9 @@
 </form>
 <script>
 // state list loads only after a country is chosen (async), like many real apps
-const S={US:[['NY','New York'],['CA','California'],['IL','Illinois'],['TX','Texas'],['WA','Washington'],['FL','Florida'],['CO','Colorado'],['MA','Massachusetts'],['GA','Georgia']],
- AU:[['NSW','New South Wales'],['VIC','Victoria'],['QLD','Queensland'],['WA','Western Australia'],['SA','South Australia'],['TAS','Tasmania'],['ACT','Australian Capital Territory']],
- CA:[['ON','Ontario - ON'],['BC','British Columbia'],['QC','Quebec'],['AB','Alberta'],['MB','Manitoba']]};
+const S={US:'Alabama|Arizona|California|Colorado|District of Columbia|Florida|Georgia|Hawaii|Illinois|Indiana|Kentucky|Louisiana|Maryland|Massachusetts|Michigan|Minnesota|Missouri|Nevada|New York|North Carolina|Ohio|Oklahoma|Oregon|Pennsylvania|Tennessee|Texas|Utah|Virginia|Washington|Wisconsin'.split('|'),
+ AU:['New South Wales','Victoria','Queensland','Western Australia','South Australia','Tasmania','Australian Capital Territory','Northern Territory'],
+ CA:['Ontario - ON','British Columbia','Quebec','Alberta','Manitoba','Nova Scotia','Saskatchewan','Newfoundland and Labrador','New Brunswick']};
 document.getElementById('co').addEventListener('change',e=>{const s=document.getElementById('st');s.length=1;
- setTimeout(()=>{(S[e.target.value]||[]).forEach(([v,t],i)=>{const o=document.createElement('option');o.value=String(i+100);o.textContent=t;s.appendChild(o)})},350)});
+ setTimeout(()=>{(S[e.target.value]||[]).forEach((t,i)=>{const v=i;const o=document.createElement('option');o.value=String(i+100);o.textContent=t;s.appendChild(o)})},350)});
 </script></body></html>

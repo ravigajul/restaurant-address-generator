@@ -2,7 +2,8 @@
 
 Static, client-side tool: enter a locale (`en_US`, `en_AU`, `de_DE`, ...) and get a fresh, unique restaurant name, full address, phone and a format- and checksum-valid VAT / tax ID. Click any field to copy it.
 
-Shareable per-locale links: `?locale=en_AU`
+Optional **State / Region** dropdown (changes with the locale) limits the address to cities in that state.
+Shareable links: `?locale=en_AU` or `?locale=en_US&region=WA`
 
 Supported: en_US en_CA en_GB en_AU en_NZ en_IE en_IN de_DE fr_FR es_ES it_IT nl_NL sv_SE pt_BR ja_JP
 
@@ -24,7 +25,7 @@ Pin it, open the form page, click the icon, **Generate**, then **Fill this page*
 
 **Want to know how it works?** See [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md) for a walkthrough of the manifest, popup, script injection, field matching and tests.
 
-**Tests** — `cd tests && npm i && npm test` launches real Chrome with the extension and fills two test forms across 8 locales.
+**Tests** — `cd tests && npm i && npm test` tests the web page and launches real Chrome with the extension to fill two test forms across 8 locales and chosen states.
 Set `BROWSER=/path/to/msedge` to run the same suite in Edge.
 
 If you change the generator in `index.html`, run `./build-extension.sh` (syncs `extension/generator.js` and rebuilds the zip).

@@ -12,13 +12,14 @@ const extId=crypto.createHash('sha256').update(EXT).digest('hex').slice(0,32).re
    enableExtensions:[EXT],userDataDir:fs.mkdtempSync('/tmp/pp-'),args:['--no-first-run','--no-default-browser-check']});
  const extId=await browser.installExtension?.(EXT).catch(()=>null) ?? null; if(extId) global.__id=extId;
  let fails=0; const check=(c,m)=>{console.log((c?'  PASS ':'  FAIL ')+m); if(!c)fails++;};
- async function run(page,locale,loc){
+ async function run(page,locale,region){
    const formUrl=`http://127.0.0.1:${PORT}/${page}`;
    const form=await browser.newPage(); await form.goto(formUrl);
    const pop=await browser.newPage(); await pop.goto(`chrome-extension://${global.__id||extId}/popup.html`);
    const errs=[]; pop.on('pageerror',e=>errs.push(e.message)); pop.on('console',m=>m.type()==='error'&&errs.push(m.text()));
    await pop.evaluate(async url=>{const [t]=await chrome.tabs.query({url}); chrome.tabs.query=async()=>[t];},formUrl);
-   await pop.$eval('#loc',(e,v)=>e.value=v,locale); await pop.click('#gen');
+   await pop.$eval('#loc',(e,v)=>{e.value=v;e.dispatchEvent(new Event('input'))},locale);
+   if(region) await pop.select('#reg',region); await pop.click('#gen');
    const rows=await pop.$$eval('.f',els=>els.map(e=>[e.children[0].textContent,e.children[1].textContent]));
    await pop.click('#fill');
    await pop.waitForFunction(()=>/Filled|No matching|Could not|⚠|allow/.test(document.getElementById('msg').textContent),{timeout:15000}).catch(async()=>{console.log('  TIMEOUT msg=',await pop.$eval('#msg',e=>e.textContent),'errs=',errs)});
@@ -39,6 +40,13 @@ const extId=crypto.createHash('sha256').update(EXT).digest('hex').slice(0,32).re
    check(vals.country===expCountry,'country select '+vals.country);
    const reg=R(rows,'State/Region'); if(['en_US','en_AU','en_CA'].includes(locale)) check(vals.state && !/Select/.test(vals.state) && vals.state!=='','STATE selected: '+reg+' -> '+JSON.stringify(vals.state));
    check(vals.taxId===rows.at(-1)[1],'tax '+vals.taxId);
+ }
+ for(const [locale,region,city,stateName] of [['en_US','WA','Seattle','Washington'],['en_AU','WA','Perth','Western Australia'],['en_CA','NS','Halifax','Nova Scotia'],['en_US','NY',null,'New York']]){
+   console.log(`\n== us.html with ${locale} + chosen state ${region}`); const {rows,msg,vals,errs}=await run('us.html',locale,region);
+   console.log('  popup:',msg.replace(/\n/g,' | ')); check(!errs.length,'no popup errors '+errs.join(';'));
+   check(R(rows,'State/Region')===region,'generated state is '+R(rows,'State/Region'));
+   if(city) check(R(rows,'City')===city&&vals.city===city,'city is '+vals.city); else check(vals.city===R(rows,'City'),'city '+vals.city);
+   check(vals.state===stateName,'STATE dropdown = '+vals.state);
  }
  for(const locale of ['de_DE','en_GB','fr_FR','ja_JP']){
    console.log(`\n== plain.html with ${locale}`); const {rows,msg,vals,errs}=await run('plain.html',locale);

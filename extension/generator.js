@@ -127,6 +127,46 @@ const LOCALES = {
 };
 
 
+
+/* ---------- more cities so most states / regions have an entry ---------- */
+const EXTRA_CITIES = {
+  en_US:[['San Francisco','CA','941##'],['San Diego','CA','921##'],['Dallas','TX','752##'],['Buffalo','NY','142##'],['Orlando','FL','328##'],
+    ['Philadelphia','PA','191##'],['Phoenix','AZ','850##'],['Columbus','OH','432##'],['Detroit','MI','482##'],['Portland','OR','972##'],
+    ['Las Vegas','NV','891##'],['Nashville','TN','372##'],['New Orleans','LA','701##'],['Minneapolis','MN','554##'],['St. Louis','MO','631##'],
+    ['Charlotte','NC','282##'],['Richmond','VA','232##'],['Baltimore','MD','212##'],['Salt Lake City','UT','841##'],['Milwaukee','WI','532##'],
+    ['Indianapolis','IN','462##'],['Honolulu','HI','968##'],['Oklahoma City','OK','731##'],['Louisville','KY','402##'],['Washington','DC','200##']],
+  en_CA:[['Halifax','NS','B3$ #$#'],['Edmonton','AB','T5$ #$#'],['Québec','QC','G1$ #$#'],['Victoria','BC','V8$ #$#'],['Saskatoon','SK','S7$ #$#'],
+    ['St. John’s','NL','A1$ #$#'],['Fredericton','NB','E3$ #$#']],
+  en_AU:[['Gold Coast','QLD','42##'],['Newcastle','NSW','23##'],['Geelong','VIC','32##'],['Darwin','NT','08##'],['Cairns','QLD','48##']],
+  en_GB:[['Belfast','Northern Ireland','BT# #$$'],['Glasgow','Scotland','G## #$$'],['Liverpool','England','L# #$$'],['Newcastle upon Tyne','England','NE# #$$'],['Swansea','Wales','SA# #$$']],
+  en_NZ:[['Tauranga','Bay of Plenty','31##'],['Queenstown','Otago','93##'],['Napier','Hawke’s Bay','41##']],
+  en_IN:[['Kolkata','West Bengal','700###','19'],['Ahmedabad','Gujarat','380###','24'],['Jaipur','Rajasthan','302###','08'],['Lucknow','Uttar Pradesh','226###','09'],
+    ['Kochi','Kerala','682###','32'],['Chandigarh','Chandigarh','160###','04']],
+  de_DE:[['Dresden','Sachsen','01###'],['Hannover','Niedersachsen','30###'],['Nürnberg','Bayern','90###'],['Düsseldorf','Nordrhein-Westfalen','40###'],['Bremen','Bremen','28###']],
+  fr_FR:[['Strasbourg','Grand Est','670##'],['Lille','Hauts-de-France','590##'],['Nantes','Pays de la Loire','440##'],['Montpellier','Occitanie','340##'],['Rennes','Bretagne','350##']],
+  es_ES:[['Zaragoza','Aragón','500##'],['Málaga','Andalucía','290##'],['Palma','Islas Baleares','070##'],['Murcia','Región de Murcia','300##']],
+  it_IT:[['Bologna','BO','401##'],['Genova','GE','161##'],['Palermo','PA','901##'],['Verona','VR','371##'],['Bari','BA','701##']],
+  nl_NL:[['Groningen','Groningen','97## @@'],['Maastricht','Limburg','62## @@'],['Arnhem','Gelderland','68## @@']],
+  sv_SE:[['Linköping','Östergötland','58# ##'],['Örebro','Örebro län','70# ##'],['Umeå','Västerbotten','90# ##']],
+  pt_BR:[['Salvador','BA','40###-###'],['Recife','PE','50###-###'],['Porto Alegre','RS','90###-###'],['Fortaleza','CE','60###-###'],['Manaus','AM','69###-###']],
+  ja_JP:[['愛知県','名古屋市中区','460-####'],['福岡県','福岡市中央区','810-####'],['神奈川県','横浜市中区','231-####'],['広島県','広島市中区','730-####']],
+};
+for (const k in EXTRA_CITIES) LOCALES[k].cities.push(...EXTRA_CITIES[k]);
+
+/* full names for abbreviated regions (used for labels and for dropdowns that list full names) */
+const REGION_NAMES = {};
+const _RN = ({ US:{NY:'New York',CA:'California',IL:'Illinois',TX:'Texas',WA:'Washington',FL:'Florida',CO:'Colorado',MA:'Massachusetts',GA:'Georgia',PA:'Pennsylvania',AZ:'Arizona',OH:'Ohio',MI:'Michigan',OR:'Oregon',NV:'Nevada',TN:'Tennessee',LA:'Louisiana',MN:'Minnesota',MO:'Missouri',NC:'North Carolina',VA:'Virginia',MD:'Maryland',UT:'Utah',WI:'Wisconsin',IN:'Indiana',HI:'Hawaii',OK:'Oklahoma',KY:'Kentucky',DC:'District of Columbia'},
+   CA:{ON:'Ontario',BC:'British Columbia',QC:'Quebec',AB:'Alberta',MB:'Manitoba',NS:'Nova Scotia',SK:'Saskatchewan',NL:'Newfoundland and Labrador',NB:'New Brunswick'},
+   AU:{NSW:'New South Wales',VIC:'Victoria',QLD:'Queensland',WA:'Western Australia',SA:'South Australia',TAS:'Tasmania',ACT:'Australian Capital Territory',NT:'Northern Territory'},
+   BR:{SP:'São Paulo',RJ:'Rio de Janeiro',DF:'Distrito Federal',PR:'Paraná',MG:'Minas Gerais',BA:'Bahia',PE:'Pernambuco',RS:'Rio Grande do Sul',CE:'Ceará',AM:'Amazonas'},
+   IT:{RM:'Roma',MI:'Milano',NA:'Napoli',TO:'Torino',FI:'Firenze',BO:'Bologna',GE:'Genova',PA:'Palermo',VR:'Verona',BA:'Bari'} })
+
+for (const cc in _RN) for (const ab in _RN[cc]) REGION_NAMES[cc+'_'+ab] = _RN[cc][ab];
+
+const regionOf = (L, c) => L.style === 'J' ? c[0] : c[1];           // Japan: the prefecture is the "state"
+function regionsFor(code){ const L = LOCALES[code]; return [...new Set(L.cities.map(c => regionOf(L, c)))].sort((a,b) => a.localeCompare(b)); }
+function regionLabel(code, r){ const n = REGION_NAMES[code.slice(-2)+'_'+r]; return n && n !== r ? `${r} — ${n}` : r; }
+
 /* ---------- people (first/last names by locale) ---------- */
 const NAMES = {
   en:{f:['James','Mary','Robert','Linda','Michael','Sarah','David','Emma','Daniel','Olivia','Thomas','Grace','Henry','Chloe','Samuel','Hannah','Oliver','Megan'],
@@ -165,10 +205,12 @@ function assemble(L, f){
 }
 
 const seen = new Set();   // guarantees no repeats within this session
-function generate(code){
+function generate(code, region){
   const L = LOCALES[code];
   for (let attempt = 0; attempt < 50; attempt++){
-    const c = pick(L.cities);
+    const pool = region ? L.cities.filter(x => regionOf(L, x) === region) : L.cities;
+    if (!pool.length) throw new Error('No cities for region ' + region);
+    const c = pick(pool);
     const city = c[0];
     const f = { name: L.name(), street: L.street(), city, region:'', postal: fill(c[2]), country: L.country };
     if (L.style === 'J'){ f.city = c[0]; f.region = c[1]; } else f.region = c[1];
