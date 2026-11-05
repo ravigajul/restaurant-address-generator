@@ -11,7 +11,7 @@ let bad = 0, total = 0;
 for (const code of Object.keys(L.LOCALES)) {
   const cc = code.slice(-2), Lc = L.LOCALES[code];
   for (const c of Lc.cities) {                      // every city must have a curated list (no random fallback)
-    const key = Lc.style === 'J' ? c[1] : c[0];
+    const key = c[0];
     if (!L.POSTAL[code] || !L.POSTAL[code][key]) { console.log('NO CURATED POSTCODES:', code, key); bad++; }
   }
   for (const r of ['', ...L.regionsFor(code)]) for (let i = 0; i < 60; i++) {
