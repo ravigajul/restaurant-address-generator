@@ -181,7 +181,7 @@ const LOCALES = {
     cities:[['Stockholm','Stockholm County','11# ##'],['Gothenburg','Västra Götaland','41# ##'],['Malmö','Skåne','21# ##'],['Uppsala','Uppsala County','75# ##']] },
   en_SG:{ country:'Singapore', tax:'SG', style:'S', phone:'6555 ####',
     name:()=>pick(['Hawker Delights','Lion City Kitchen','Kopitiam Corner','Chilli Crab House','Laksa Lane','Satay Street','Orchard Noodle Bar','Peranakan Table','Merlion Cafe','Garden Rice House']),
-    street:()=>`${num(1,500)} ${pick(['Orchard','Victoria','Bukit Timah','Jurong','Tampines','Bedok','Clementi','Marine Parade','Serangoon','Woodlands'])} ${pick(['Road','Avenue','Street'])}, #${String(num(1,30)).padStart(2,'0')}-${String(num(1,99)).padStart(2,'0')}`,
+    street:()=>`${num(1,500)} ${pick(['Orchard','Victoria','Bukit Timah','Jurong','Tampines','Bedok','Clementi','Marine Parade','Serangoon','Woodlands'])} ${pick(['Road','Avenue','Street'])} Unit ${String(num(1,30)).padStart(2,'0')} ${String(num(1,99)).padStart(2,'0')}`,
     cities:[['Orchard','Central Region','23####'],['Marina Bay','Central Region','01####'],['Tampines','East Region','52####'],['Jurong East','West Region','60####'],['Woodlands','North Region','73####']] },
   en_MY:{ country:'Malaysia', tax:'MY', style:'D', phone:'03 5555 ####',
     name:()=>pick(['Restoran Selera Kampung','Nasi Lemak Corner','Mamak Station','Kedai Kopi Ah Seng','Restoran Rasa Sayang','Satay House','Laksa Penang Kitchen','Kopitiam Lama','Dapur Mak Cik','Teh Tarik Cafe']),
@@ -205,7 +205,7 @@ const LOCALES = {
     cities:[['Beijing','Beijing','1000##','110105'],['Shanghai','Shanghai','2000##','310115'],['Guangzhou','Guangdong','5106##','440106'],['Shenzhen','Guangdong','5180##','440305'],['Chengdu','Sichuan','6100##','510104']] },
   en_HK:{ country:'Hong Kong', tax:'HK', style:'H', phone:'2555 ####',
     name:()=>pick(['Golden Lotus Cha Chaan Teng','Lucky Wok Kitchen','Harbour View Dim Sum','Jade Garden Congee','Dragon Gate Noodles','Victoria Roast Goose','Kowloon Tea House','Lantern Hot Pot','Pearl Bay Seafood','Red Lantern Bistro']),
-    street:()=>`Unit ${num(1,20)}, ${num(1,40)}/F, ${num(1,300)} ${pick(['Nathan','Queen’s','Hennessy','Des Voeux','Jaffe','Canton','Lockhart','Hollywood','Argyle','Wellington'])} ${pick(['Road','Street'])}`,
+    street:()=>`Unit ${num(1,20)} Floor ${num(1,40)} ${num(1,300)} ${pick(['Nathan','Queen’s','Hennessy','Des Voeux','Jaffe','Canton','Lockhart','Hollywood','Argyle','Wellington'])} ${pick(['Road','Street'])}`,
     cities:[['Central','Hong Kong Island','999077'],['Causeway Bay','Hong Kong Island','999077'],['Tsim Sha Tsui','Kowloon','999077'],['Mong Kok','Kowloon','999077'],['Sha Tin','New Territories','999077']] },
   en_MO:{ country:'Macau', tax:'MO', style:'H', phone:'2855 ####',
     name:()=>pick(['Restaurante Lusitano','Casa de Pasto Macau','Tasca do Porto','Dim Sum Garden','Café Sol Nascente','Congee House','Cotai Hot Pot','Restaurante Sabor de Macau','Pastelaria Doce Lar','Noodle Pavilion']),
@@ -345,6 +345,8 @@ const DE_MAP = {'ä':'ae','ö':'oe','ü':'ue','Ä':'Ae','Ö':'Oe','Ü':'Ue'};   
 const plain = (s, code) => { const de = /^de_/.test(code || '');
   return String(s).replace(/[^\u0000-\u007F]/g, ch => (de && DE_MAP[ch]) || (ch in PLAIN_MAP ? PLAIN_MAP[ch] : ch)).normalize('NFD').replace(/[̀-ͯ]/g, ''); };
 for (const k in LOCALES) LOCALES[k].code = k;
+/* letters, digits and spaces only (no apostrophes, hyphens, periods, &, #, commas, slashes) for the address and name fields */
+const clean = (s, code) => plain(s, code).replace(/&/g, 'and').replace(/[’'.#()]/g, '').replace(/[,\/\-]/g, ' ').replace(/\s+/g, ' ').trim();
 
 
 
@@ -358,9 +360,9 @@ const _RN = ({ US:{NY:'New York',CA:'California',IL:'Illinois',TX:'Texas',WA:'Wa
 
 for (const cc in _RN) for (const ab in _RN[cc]) REGION_NAMES[cc+'_'+ab] = _RN[cc][ab];
 
-const regionOf = (L, c) => plain(c[1], L.code);
+const regionOf = (L, c) => clean(c[1], L.code);
 function regionsFor(code){ const L = LOCALES[code]; return [...new Set(L.cities.map(c => regionOf(L, c)))].sort((a,b) => a.localeCompare(b)); }
-function regionLabel(code, r){ const n = REGION_NAMES[code.slice(-2)+'_'+r]; return n && plain(n, code) !== r ? `${r} — ${plain(n, code)}` : r; }
+function regionLabel(code, r){ const n = REGION_NAMES[code.slice(-2)+'_'+r]; return n && clean(n, code) !== r ? `${r} — ${clean(n, code)}` : r; }
 
 
 function resolveRegion(code, text){          // '' = any; null = not recognised
@@ -617,7 +619,7 @@ const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it
 const ALIASES = {en_NO:'nb_NO', en_HU:'hu_HU', en_PT:'pt_PT', en_FI:'fi_FI', en_AT:'de_AT', en_BE:'nl_BE', en_CZ:'cs_CZ', en_DK:'da_DK', en_GR:'el_GR', en_LU:'fr_LU', en_PL:'pl_PL', en_RO:'ro_RO', en_SI:'sl_SI', en_AR:'es_AR', en_CL:'es_CL', en_MX:'es_MX', en_DO:'es_DO', en_PR:'es_PR', en_CH:'de_CH', en_RU:'ru_RU', en_KZ:'ru_KZ', en_CN:'zh_CN', en_TW:'zh_TW', en_KR:'ko_KR'};   // English-style codes accepted as exact matches
 const ascii = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z]/g,'').toLowerCase();
 function person(code){
-  const n = NAMES[NAME_SET[code] || 'en'], first = plain(pick(n.f), code), last = plain(pick(n.l), code);
+  const n = NAMES[NAME_SET[code] || 'en'], first = clean(pick(n.f), code), last = clean(pick(n.l), code);
   const a = ascii(first), b = ascii(last);
   const email = (a && b ? `${a}.${b}` : `guest${digits(4)}`) + num(10,99) + '@example.com';  // example.com is reserved for documentation
   return { first, last, email };
@@ -630,8 +632,8 @@ function assemble(L, f){
     case 'B': return `${f.street}, ${f.city} ${f.region} ${f.postal}, ${f.country}`;
     case 'C': return `${f.street}, ${f.city}, ${f.postal}, ${f.country}`;
     case 'D': return `${f.street}, ${f.postal} ${f.city}, ${f.country}`;
-    case 'E': return `${f.street}, ${f.postal} ${f.city} (${f.region}), ${f.country}`;
-    case 'F': return `${f.street} - ${f.city} - ${f.region}, ${f.postal}, ${f.country}`;
+    case 'E': return `${f.street}, ${f.postal} ${f.city} ${f.region}, ${f.country}`;
+    case 'F': return `${f.street}, ${f.city}, ${f.region}, ${f.postal}, ${f.country}`;
     case 'X': return `${f.street}, ${f.city}, ${f.region===f.city?'':f.region+' '}${f.postal}, ${f.country}`;
     case 'S': return `${f.street}, ${f.city}, ${f.country} ${f.postal}`;
     case 'T': return `${f.street}, ${f.city} ${f.postal}, ${f.country}`;
@@ -649,7 +651,7 @@ function generate(code, region){
     const city = c[0];
     const f = { name: L.name(), street: L.street(), city, region:'', postal: postalFor(code, c), country: L.country };
     f.region = c[1];
-    for (const k of ['name','street','city','region','country']) f[k] = plain(f[k], code);
+    for (const k of ['name','street','city','region','country']) f[k] = clean(f[k], code);
     const tax = TAX[L.tax]({gst:c[3]}); tax.label = plain(tax.label, code); tax.value = tax.value.replace(/[^A-Za-z0-9]/g, ""); // strip dashes/spaces/dots/slashes
     const phone = fill(L.phone).replace(/\D/g,'');   // national number, digits only (no country code)
     const full = assemble(L, f);          // full address keeps the natural spacing
