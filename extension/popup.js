@@ -2,7 +2,7 @@
 (() => { // own scope: generator.js already defines helpers like `fill`
 const $ = id => document.getElementById(id);
 const EN = { US:'United States', CA:'Canada', GB:'United Kingdom', AU:'Australia', NZ:'New Zealand', IE:'Ireland', IN:'India',
-  DE:'Germany', FR:'France', ES:'Spain', IT:'Italy', NL:'Netherlands', SE:'Sweden', HU:'Hungary', NO:'Norway', PT:'Portugal', FI:'Finland', BR:'Brazil', JP:'Japan' };
+  DE:'Germany', FR:'France', ES:'Spain', IT:'Italy', NL:'Netherlands', SE:'Sweden', HU:'Hungary', NO:'Norway', PT:'Portugal', FI:'Finland', AT:'Austria', BE:'Belgium', CZ:'Czechia', DK:'Denmark', GR:'Greece', LU:'Luxembourg', PL:'Poland', RO:'Romania', SI:'Slovenia', BR:'Brazil', JP:'Japan' };
 let data = null;
 
 function normalize(s){
