@@ -12,6 +12,9 @@
   button{font:inherit;cursor:pointer}
   .p{padding:8px 12px;border:0;border-radius:8px;background:var(--accent);color:var(--ink);font-weight:600}
   .s{padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--text)}
+  /* one primary at a time: Generate until data exists, then Fill */
+  .w:has(#fill:disabled) #gen{border:0;background:var(--accent);color:var(--ink);font-weight:600}
+  #fill:disabled{background:transparent;color:var(--muted);border:1px solid var(--line);cursor:not-allowed}
   .big{width:100%;margin-top:10px;padding:10px;font-size:15px}
   .f{display:flex;gap:8px;width:100%;text-align:left;margin:6px 0 0;padding:7px 10px;border:1px solid transparent;border-radius:8px;background:var(--row);color:var(--text)}
   .f:hover{background:var(--hover)} .f.done{border-color:var(--ok)}
