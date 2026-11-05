@@ -455,7 +455,7 @@ function generate(code, region){
     const city = c[0];
     const f = { name: L.name(), street: L.street(), city, region:'', postal: postalFor(code, c), country: L.country };
     if (L.style === 'J'){ f.city = c[0]; f.region = c[1]; } else f.region = c[1];
-    const tax = TAX[L.tax]({gst:c[3]});
+    const tax = TAX[L.tax]({gst:c[3]}); tax.value = tax.value.replace(/[^A-Za-z0-9]/g, ""); // strip dashes/spaces/dots/slashes
     const phone = fill(L.phone).replace(/\D/g,'');   // national number, digits only (no country code)
     const full = assemble(L, f);
     const who = person(code);
