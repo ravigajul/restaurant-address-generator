@@ -10,6 +10,7 @@ function normalize(s){
   const m = s.match(/^([a-zA-Z]{2})_([a-zA-Z]{2})$/);
   const code = m ? m[1].toLowerCase()+'_'+m[2].toUpperCase() : (/^[a-zA-Z]{2}$/.test(s) ? '_'+s.toUpperCase() : s);
   if (LOCALES[code]) return code;
+  if (ALIASES[code]) return ALIASES[code];
   const region = code.slice(-2).toUpperCase();
   return (/^([a-z]{2})?_?[a-z]{2}$/i.test(code) && Object.keys(LOCALES).find(k => k.endsWith('_'+region))) || code;
 }

@@ -444,6 +444,7 @@ const NAMES = {
   ja:{f:['太郎','花子','健太','美咲','大輔','陽子','翔','愛','直樹','由美'],l:['佐藤','鈴木','高橋','田中','伊藤','渡辺','山本','中村','小林','加藤']},
 };
 const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it_IT:'it', nl_NL:'nl', sv_SE:'sv', hu_HU:'hu', nb_NO:'no', pt_BR:'pt', ja_JP:'ja'};
+const ALIASES = {en_NO:'nb_NO', en_HU:'hu_HU'};   // English-style codes accepted as exact matches
 const ascii = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z]/g,'').toLowerCase();
 function person(code){
   const n = NAMES[NAME_SET[code] || 'en'], first = pick(n.f), last = pick(n.l);
@@ -520,6 +521,7 @@ function normalize(s){
   let m = s.match(/^([a-zA-Z]{2})_([a-zA-Z]{2})$/);
   const code = m ? m[1].toLowerCase()+'_'+m[2].toUpperCase() : (/^[a-zA-Z]{2}$/.test(s) ? '_'+s.toUpperCase() : s);
   if (LOCALES[code]) return code;
+  if (ALIASES[code]) return ALIASES[code];
   // Fall back to the country part: en_IT -> it_IT, bare "IT" -> it_IT
   const region = code.slice(-2).toUpperCase();
   const hit = /^([a-z]{2})?_?[a-z]{2}$/i.test(code) && Object.keys(LOCALES).find(k => k.endsWith('_'+region));
@@ -533,9 +535,10 @@ function render(){
     return;
   }
   const typed = $('loc').value.trim();
-  err.textContent = (typed && typed !== code && typed.replace('-','_').toLowerCase() !== code.toLowerCase())
+  const aliased = !!ALIASES[typed.replace('-','_').replace(/^(..)_(..)$/,(m,a,b)=>a.toLowerCase()+'_'+b.toUpperCase())];
+  err.textContent = (!aliased && typed && typed !== code && typed.replace('-','_').toLowerCase() !== code.toLowerCase())
     ? `“${typed}” isn't a listed locale, so I used its country: ${code}.` : '';
-  $('loc').value = code;
+  if (!aliased) $('loc').value = code;     // keep an accepted alias (en_NO) as typed
   const rv = $('reg').value.trim(), region = resolveRegion(code, rv);
   if (region === null){ err.textContent = `“${rv}” isn't a state/region for ${code}. Try e.g. ${regionsFor(code).slice(0,6).join(', ')}…`; return; }
   $('reg').value = region;
