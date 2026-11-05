@@ -56,6 +56,8 @@ const TAX = {
         const cs='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let s=0;
         [...base].forEach((ch,i)=>{ const p = cs.indexOf(ch)*(i%2?2:1); s += Math.floor(p/36)+p%36; });
         return {label:'GSTIN', value:base+cs[(36-s%36)%36]}; },
+  NO(){ for(;;){ const b = String(num(8,9))+digits(7); const r = wsum(b,[3,2,7,6,5,4,3,2])%11; const c = r===0?0:11-r;   // organisasjonsnummer, mod 11
+          if (c<10) return {label:'MVA-nummer (VAT)', value:'NO'+b+c+'MVA'}; } },
   HU(){ const b = String(num(1,9))+digits(6); const c = (10 - wsum(b,[9,7,3,1,9,7,3])%10)%10;   // 8-digit adószám core
         return {label:'ÁFA-szám (VAT)', value:'HU'+b+c}; },
   JP(){ const b = String(num(1,9))+digits(11); let s=0; // 12 digits, Pn counted from right
@@ -119,6 +121,10 @@ const LOCALES = {
     name:()=>pick(['Restaurang Smak','Krogen Björken','Bistro Norden','Matsalen','Café Fika','Kök & Bar Havet','Gastro Stockholm','Wärdshuset Ekan','Matbaren','Smörgåsen']),
     street:()=>`${pick(['Stor','Drottning','Kung','Kyrk','Järn','Skol','Vasa','Hamn','Bergs','Ringvägen'])}${pick(['gatan','vägen','torget','allén'])} ${num(1,140)}`,
     cities:[['Stockholm','Stockholms län','11# ##'],['Göteborg','Västra Götaland','41# ##'],['Malmö','Skåne','21# ##'],['Uppsala','Uppsala län','75# ##']] },
+  nb_NO:{ country:'Norge', tax:'NO', style:'D', phone:'22 55 ## ##',
+    name:()=>pick(['Restaurant Fjordbris','Bistro Nordlys','Kafé Fyrlykten','Gamle Mølla','Brasserie Bryggen','Kro & Kjøkken','Det Blå Hjørnet','Smak av Norge','Matstuen','Havnekjelleren']),
+    street:()=>`${pick(['Kirke','Storgata','Kong Haakon','Dronning Mauds','Strand','Skole','Havne','Bryggen','Fjord','Torg','Nedre','Øvre'])}${pick(['gata','veien','plass','allé'])} ${num(1,120)}`,
+    cities:[['Oslo','Oslo','0###'],['Bergen','Vestland','50##'],['Trondheim','Trøndelag','70##'],['Stavanger','Rogaland','40##'],['Tromsø','Troms','90##']] },
   hu_HU:{ country:'Magyarország', tax:'HU', style:'D', phone:'1 555 ####',
     name:()=>pick(['Gulyás Csárda','Étterem a Hídnál','Bistro Paprika','Kéknyelű Vendéglő','Arany Szarvas Étterem','Fehér Asztal','Csemege Kisvendéglő','Tokaji Borozó','Hortobágyi Csárda','Kávéház Központ']),
     street:()=>`${pick(['Fő','Kossuth Lajos','Petőfi Sándor','Széchenyi','Rákóczi','Árpád','Ady Endre','Bartók Béla','Deák Ferenc','Arany János','Jókai','Templom'])} ${pick(['utca','tér','út','körút'])} ${num(1,120)}`,
@@ -306,6 +312,9 @@ const POSTAL = {
   sv_SE:{ 'Stockholm':['111 20','111 21','111 22','111 29','111 30','111 51','114 32','114 35','118 20','118 46','117 43'],
     'Göteborg':['411 01','411 05','411 11','411 18','413 01','414 51'], 'Malmö':['211 11','211 20','211 22','211 34','212 11'],
     'Uppsala':['753 10','753 20','752 37'], 'Linköping':['582 22','582 24','582 25'], 'Örebro':['702 11','702 22','703 61'], 'Umeå':['903 29','903 32','901 87'] },
+  nb_NO:{ 'Oslo':['0150','0151','0152','0153','0154','0155','0157','0159','0160','0161','0162','0164'],
+    'Bergen':['5003','5004','5005','5006','5007','5008','5010','5011','5012'], 'Trondheim':['7010','7011','7012','7013','7014','7030','7031'],
+    'Stavanger':['4005','4006','4007','4008','4009','4010','4011'], 'Tromsø':['9008','9009','9010','9011','9012','9013'] },
   hu_HU:{ 'Budapest':['1051','1052','1053','1055','1061','1065','1072','1088','1111','1138','1146','1203'],
     'Debrecen':['4024','4025','4026','4027','4028','4029','4032'], 'Szeged':['6720','6721','6722','6723','6724','6725'],
     'Pécs':['7621','7622','7624','7625','7626','7627'], 'Győr':['9021','9022','9023','9024','9025','9026'] },
@@ -342,12 +351,13 @@ const NAMES = {
   es:{f:['Carlos','Lucía','Javier','Marta','Diego','Carmen','Pablo','Elena','Sergio','Paula'],l:['García','Fernández','López','Martínez','Sánchez','Pérez','Gómez','Ruiz','Díaz','Moreno']},
   it:{f:['Luca','Giulia','Marco','Sofia','Matteo','Chiara','Alessandro','Francesca','Davide','Elena'],l:['Rossi','Russo','Ferrari','Esposito','Bianchi','Romano','Colombo','Ricci','Marino','Greco']},
   nl:{f:['Daan','Emma','Sem','Sanne','Lars','Fleur','Bram','Lotte','Thijs','Noor'],l:['de Jong','Jansen','de Vries','van den Berg','Bakker','Visser','Smit','Meijer','Mulder','de Boer']},
+  no:{f:['Magnus','Ingrid','Henrik','Emilie','Lars','Sofie','Kristian','Nora','Ola','Thea'],l:['Hansen','Johansen','Olsen','Larsen','Andersen','Pedersen','Nilsen','Kristiansen','Jensen','Karlsen']},
   hu:{f:['Bence','Anna','Márk','Eszter','Gábor','Katalin','Zoltán','Réka','Péter','Dóra'],l:['Nagy','Kovács','Tóth','Szabó','Horváth','Varga','Kiss','Molnár','Németh','Farkas']},
   sv:{f:['Erik','Maja','Oskar','Elsa','Axel','Ebba','Lars','Astrid','Nils','Freja'],l:['Andersson','Johansson','Karlsson','Nilsson','Eriksson','Larsson','Olsson','Persson','Svensson','Gustafsson']},
   pt:{f:['João','Maria','Pedro','Ana','Lucas','Beatriz','Rafael','Camila','Gustavo','Juliana'],l:['Silva','Santos','Oliveira','Souza','Pereira','Costa','Rodrigues','Almeida','Nascimento','Lima']},
   ja:{f:['太郎','花子','健太','美咲','大輔','陽子','翔','愛','直樹','由美'],l:['佐藤','鈴木','高橋','田中','伊藤','渡辺','山本','中村','小林','加藤']},
 };
-const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it_IT:'it', nl_NL:'nl', sv_SE:'sv', hu_HU:'hu', pt_BR:'pt', ja_JP:'ja'};
+const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it_IT:'it', nl_NL:'nl', sv_SE:'sv', hu_HU:'hu', nb_NO:'no', pt_BR:'pt', ja_JP:'ja'};
 const ascii = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z]/g,'').toLowerCase();
 function person(code){
   const n = NAMES[NAME_SET[code] || 'en'], first = pick(n.f), last = pick(n.l);
