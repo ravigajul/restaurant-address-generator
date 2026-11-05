@@ -56,6 +56,13 @@ const TAX = {
         const cs='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let s=0;
         [...base].forEach((ch,i)=>{ const p = cs.indexOf(ch)*(i%2?2:1); s += Math.floor(p/36)+p%36; });
         return {label:'GSTIN', value:base+cs[(36-s%36)%36]}; },
+  CH(){ for(;;){ const b = String(num(1,9))+digits(7); const c = 11-wsum(b,[5,4,3,2,7,6,5,4])%11;   // UID, mod 11
+          if (c!==10) return {label:'MWST-Nr. (UID)', value:'CHE'+b+(c===11?0:c)+'MWST'}; } },
+  RU(){ const b = pick(['77','78','50','66','54'])+digits(7); return {label:'ИНН', value:b+((wsum(b,[2,4,10,3,5,9,4,6,8])%11)%10)}; },
+  KZ(){ const p2 = n => String(n).padStart(2,'0');
+        for(;;){ const b = p2(num(0,99))+p2(num(1,12))+p2(num(1,28))+pick(['4','5','6'])+digits(4);
+          let s = wsum(b,[1,2,3,4,5,6,7,8,9,10,11])%11; if (s===10) s = wsum(b,[3,4,5,6,7,8,9,10,11,1,2])%11;
+          if (s!==10) return {label:'БИН', value:b+s}; } },
   AR(){ for(;;){ const b = pick(['30','33','34'])+digits(8); const c = 11-wsum(b,[5,4,3,2,7,6,5,4,3,2])%11;   // CUIT, mod 11
           if (c!==10) return {label:'CUIT', value:b+(c===11?0:c)}; } },
   CL(){ const b = '76'+digits(6); let s=0; [...b].reverse().forEach((ch,i)=>{ s += +ch * (2 + i%6); }); const m = 11-s%11;   // RUT, mod 11 (K = 10)
@@ -154,6 +161,18 @@ const LOCALES = {
     name:()=>pick(['Restaurang Smak','Krogen Björken','Bistro Norden','Matsalen','Café Fika','Kök & Bar Havet','Gastro Stockholm','Wärdshuset Ekan','Matbaren','Smörgåsen']),
     street:()=>`${pick(['Stor','Drottning','Kung','Kyrk','Järn','Skol','Vasa','Hamn','Bergs','Ringvägen'])}${pick(['gatan','vägen','torget','allén'])} ${num(1,140)}`,
     cities:[['Stockholm','Stockholms län','11# ##'],['Göteborg','Västra Götaland','41# ##'],['Malmö','Skåne','21# ##'],['Uppsala','Uppsala län','75# ##']] },
+  de_CH:{ country:'Schweiz', tax:'CH', style:'D', phone:'044 555 ## ##',
+    name:()=>pick(['Restaurant Zum Goldenen Kreuz','Gasthof Bären','Café Bahnhof','Wirtshaus Zur Sonne','Stübli am See','Restaurant Alpenblick','Brasserie Central','Landgasthof Rössli','Beizli Zum Löwen','Gasthaus Adler']),
+    street:()=>`${pick(['Bahnhof','Haupt','Dorf','Kirch','Schul','See','Mühle','Berg','Linden','Rosen'])}${pick(['strasse','weg','gasse','platz'])} ${num(1,150)}`,
+    cities:[['Zürich','Zürich','80##'],['Basel','Basel-Stadt','40##'],['Bern','Bern','30##'],['Luzern','Luzern','60##'],['St. Gallen','St. Gallen','90##']] },
+  ru_RU:{ country:'Россия', tax:'RU', style:'R', phone:'495 555 ## ##',
+    name:()=>pick(['Ресторан «Золотой колос»','Кафе «Березка»','Трактир «У Ивана»','Пельменная «Сибирь»','Столовая №1','Ресторан «Волга»','Кафе «Подкова»','Блинная «Масленица»','Ресторан «Три медведя»','Чайхана «Восток»']),
+    street:()=>`ул. ${pick(['Ленина','Тверская','Пушкина','Гагарина','Мира','Советская','Садовая','Победы','Кирова','Горького'])}, д. ${num(1,150)}`,
+    cities:[['Москва','Москва','1#####'],['Санкт-Петербург','Санкт-Петербург','19####'],['Новосибирск','Новосибирская область','63####'],['Екатеринбург','Свердловская область','62####'],['Казань','Республика Татарстан','42####']] },
+  ru_KZ:{ country:'Казахстан', tax:'KZ', style:'R', phone:'727 555 ## ##',
+    name:()=>pick(['Ресторан «Алатау»','Кафе «Бастау»','Чайхана «Шанырак»','Ресторан «Достык»','Кафе «Жайлау»','Бешбармак-хауз','Ресторан «Самал»','Кафе «Нур»','Кофейня «Астана»','Ресторан «Сункар»']),
+    street:()=>`ул. ${pick(['Абая','Достык','Назарбаева','Толе би','Сатпаева','Желтоксан','Кабанбай батыра','Аль-Фараби','Тауке хана','Гоголя'])}, д. ${num(1,150)}`,
+    cities:[['Алматы','Алматы','0500##'],['Астана','Астана','0100##'],['Шымкент','Шымкент','1600##'],['Караганда','Карагандинская область','1000##'],['Актобе','Актюбинская область','0300##']] },
   es_AR:{ country:'Argentina', tax:'AR', style:'D', phone:'11 5555 ####',
     name:()=>pick(['Parrilla El Gaucho','La Cantina del Puerto','Café Palermo','Restaurante El Asador','Bodegón San Telmo','Pizzería La Esquina','Parrilla La Estancia','Rotisería El Palenque','Confitería La Plaza','Cervecería La Costanera']),
     street:()=>`${pick(['Avenida','Calle'])} ${pick(['Corrientes','Santa Fe','Rivadavia','San Martín','Belgrano','Libertador','Mitre','9 de Julio','Sarmiento','Alvear'])} ${num(1,5000)}`,
@@ -409,6 +428,12 @@ const POSTAL = {
   sv_SE:{ 'Stockholm':['111 20','111 21','111 22','111 29','111 30','111 51','114 32','114 35','118 20','118 46','117 43'],
     'Göteborg':['411 01','411 05','411 11','411 18','413 01','414 51'], 'Malmö':['211 11','211 20','211 22','211 34','212 11'],
     'Uppsala':['753 10','753 20','752 37'], 'Linköping':['582 22','582 24','582 25'], 'Örebro':['702 11','702 22','703 61'], 'Umeå':['903 29','903 32','901 87'] },
+  de_CH:{ 'Zürich':W5('8001 8002 8003 8004 8005 8006 8008 8032'), 'Basel':W5('4001 4051 4052 4053 4054 4055'),
+    'Bern':W5('3000 3001 3005 3006 3011 3012 3013'), 'Luzern':W5('6003 6004 6005 6006'), 'St. Gallen':W5('9000 9001 9004 9008') },
+  ru_RU:{ 'Москва':W5('101000 103132 107023 109012 115054 119019 125009 127006'), 'Санкт-Петербург':W5('190000 191023 191186 195027 197022'),
+    'Новосибирск':W5('630000 630004 630099 630102'), 'Екатеринбург':W5('620000 620014 620075 620142'), 'Казань':W5('420000 420015 420111 420107') },
+  ru_KZ:{ 'Алматы':W5('050000 050002 050004 050010 050012 050040'), 'Астана':W5('010000 010001 010009 010010'),
+    'Шымкент':W5('160000 160001 160011'), 'Караганда':W5('100000 100008 100012'), 'Актобе':W5('030000 030002 030010') },
   es_AR:{ 'Buenos Aires':W5('1002 1003 1004 1005 1006 1007 1010 1020 1043 1049 1425 1428'), 'Córdoba':W5('5000 5001 5002 5003 5004 5008'),
     'Rosario':W5('2000 2002 2003 2005'), 'Mendoza':W5('5500 5501 5502 5503'), 'La Plata':W5('1900 1902 1904 1906') },
   es_CL:{ 'Santiago':W5('8320000 8330000 8340000 8350000 7500000 7510000 7550000'), 'Valparaíso':W5('2340000 2350000 2360000'),
@@ -483,6 +508,8 @@ const NAMES = {
   es:{f:['Carlos','Lucía','Javier','Marta','Diego','Carmen','Pablo','Elena','Sergio','Paula'],l:['García','Fernández','López','Martínez','Sánchez','Pérez','Gómez','Ruiz','Díaz','Moreno']},
   it:{f:['Luca','Giulia','Marco','Sofia','Matteo','Chiara','Alessandro','Francesca','Davide','Elena'],l:['Rossi','Russo','Ferrari','Esposito','Bianchi','Romano','Colombo','Ricci','Marino','Greco']},
   nl:{f:['Daan','Emma','Sem','Sanne','Lars','Fleur','Bram','Lotte','Thijs','Noor'],l:['de Jong','Jansen','de Vries','van den Berg','Bakker','Visser','Smit','Meijer','Mulder','de Boer']},
+  ru:{f:['Aleksandr','Elena','Dmitry','Olga','Sergey','Natalia','Ivan','Anna','Mikhail','Tatiana'],l:['Ivanov','Smirnov','Kuznetsov','Popov','Sokolov','Lebedev','Kozlov','Novikov','Morozov','Volkov']},
+  kz:{f:['Aidar','Aigerim','Nurlan','Dana','Yerlan','Aliya','Marat','Madina','Timur','Saule'],l:['Nurpeisov','Akhmetov','Kenzhebayev','Seitkali','Omarov','Dauletov','Zhumabayev','Abdrakhmanov','Mukanov','Sadykov']},
   cs:{f:['Jan','Eva','Petr','Jana','Tomáš','Lucie','Martin','Tereza','Jakub','Kateřina'],l:['Novák','Dvořák','Černý','Procházka','Kučera','Veselý','Horák','Němec','Pokorný','Marek']},
   da:{f:['Mads','Emma','Lars','Freja','Anders','Ida','Søren','Sofie','Jens','Clara'],l:['Jensen','Nielsen','Hansen','Pedersen','Andersen','Christensen','Larsen','Sørensen','Rasmussen','Jørgensen']},
   el:{f:['Giorgos','Maria','Dimitris','Eleni','Nikos','Katerina','Kostas','Sofia','Yannis','Anna'],l:['Papadopoulos','Georgiou','Dimitriou','Nikolaou','Ioannou','Konstantinou','Vasileiou','Pappas','Antoniou','Makris']},
@@ -496,8 +523,8 @@ const NAMES = {
   pt:{f:['João','Maria','Pedro','Ana','Lucas','Beatriz','Rafael','Camila','Gustavo','Juliana'],l:['Silva','Santos','Oliveira','Souza','Pereira','Costa','Rodrigues','Almeida','Nascimento','Lima']},
   ja:{f:['太郎','花子','健太','美咲','大輔','陽子','翔','愛','直樹','由美'],l:['佐藤','鈴木','高橋','田中','伊藤','渡辺','山本','中村','小林','加藤']},
 };
-const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it_IT:'it', nl_NL:'nl', sv_SE:'sv', hu_HU:'hu', nb_NO:'no', fi_FI:'fi', de_AT:'de', es_AR:'es', es_CL:'es', es_MX:'es', es_DO:'es', es_PR:'es', nl_BE:'nl', cs_CZ:'cs', da_DK:'da', el_GR:'el', fr_LU:'fr', pl_PL:'pl', ro_RO:'ro', sl_SI:'sl', pt_PT:'pt', pt_BR:'pt', ja_JP:'ja'};
-const ALIASES = {en_NO:'nb_NO', en_HU:'hu_HU', en_PT:'pt_PT', en_FI:'fi_FI', en_AT:'de_AT', en_BE:'nl_BE', en_CZ:'cs_CZ', en_DK:'da_DK', en_GR:'el_GR', en_LU:'fr_LU', en_PL:'pl_PL', en_RO:'ro_RO', en_SI:'sl_SI', en_AR:'es_AR', en_CL:'es_CL', en_MX:'es_MX', en_DO:'es_DO', en_PR:'es_PR'};   // English-style codes accepted as exact matches
+const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it_IT:'it', nl_NL:'nl', sv_SE:'sv', hu_HU:'hu', nb_NO:'no', fi_FI:'fi', de_AT:'de', es_AR:'es', de_CH:'de', ru_RU:'ru', ru_KZ:'kz', es_CL:'es', es_MX:'es', es_DO:'es', es_PR:'es', nl_BE:'nl', cs_CZ:'cs', da_DK:'da', el_GR:'el', fr_LU:'fr', pl_PL:'pl', ro_RO:'ro', sl_SI:'sl', pt_PT:'pt', pt_BR:'pt', ja_JP:'ja'};
+const ALIASES = {en_NO:'nb_NO', en_HU:'hu_HU', en_PT:'pt_PT', en_FI:'fi_FI', en_AT:'de_AT', en_BE:'nl_BE', en_CZ:'cs_CZ', en_DK:'da_DK', en_GR:'el_GR', en_LU:'fr_LU', en_PL:'pl_PL', en_RO:'ro_RO', en_SI:'sl_SI', en_AR:'es_AR', en_CL:'es_CL', en_MX:'es_MX', en_DO:'es_DO', en_PR:'es_PR', en_CH:'de_CH', en_RU:'ru_RU', en_KZ:'ru_KZ'};   // English-style codes accepted as exact matches
 const ascii = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z]/g,'').toLowerCase();
 function person(code){
   const n = NAMES[NAME_SET[code] || 'en'], first = pick(n.f), last = pick(n.l);
@@ -515,6 +542,12 @@ function assemble(L, f){
     case 'D': return `${f.street}, ${f.postal} ${f.city}, ${f.country}`;
     case 'E': return `${f.street}, ${f.postal} ${f.city} (${f.region}), ${f.country}`;
     case 'F': return `${f.street} - ${f.city} - ${f.region}, ${f.postal}, ${f.country}`;
+    case 'R': return `${f.postal}, ${f.country}, ${f.city}, ${f.street}`;
+    case 'Z': return `${f.postal} ${f.region===f.city?'':f.region}${f.city}${f.street}`;
+    case 'K': return `${f.region} ${f.city} ${f.street} (${f.postal})`;
+    case 'S': return `${f.street}, ${f.city}, ${f.country} ${f.postal}`;
+    case 'T': return `${f.street}, ${f.city} ${f.postal}, ${f.country}`;
+    case 'H': return [f.street, f.city, f.region===f.city?'':f.region, f.country].filter(Boolean).join(', ');
     case 'J': return `〒${f.postal} ${f.city}${f.region}${f.street}`;
   }
 }

@@ -6,7 +6,7 @@ const L = new Function(js + ';return {LOCALES,generate,POSTAL,regionsFor}')();
 const FMT = {
   US:/^\d{5}$/, CA:/^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z]\d[ABCEGHJ-NPRSTV-Z]\d$/, GB:/^[A-Z]{1,2}\d[A-Z\d]?\d[ABD-HJLNP-UW-Z]{2}$/,
   AU:/^\d{4}$/, NZ:/^\d{4}$/, IE:/^[ACDEFHKNPRTV-Y]\d{2}[0-9ACDEFHKNPRTV-Y]{4}$/, IN:/^[1-9]\d{5}$/, DE:/^\d{5}$/, FR:/^\d{5}$/,
-  ES:/^(0[1-9]|[1-4]\d|5[0-2])\d{3}$/, IT:/^\d{5}$/, NL:/^[1-9]\d{3}(?!SA|SD|SS)[A-Z]{2}$/, SE:/^\d{3}\d{2}$/, BR:/^\d{5}-\d{3}$/, HU:/^[1-9]\d{3}$/, NO:/^\d{4}$/, PT:/^\d{4}-\d{3}$/, FI:/^\d{5}$/, AT:/^\d{4}$/, BE:/^[1-9]\d{3}$/, CZ:/^\d{5}$/, DK:/^\d{4}$/, GR:/^\d{5}$/, LU:/^\d{4}$/, PL:/^\d{2}-\d{3}$/, RO:/^\d{6}$/, SI:/^\d{4}$/, AR:/^\d{4}$/, CL:/^\d{7}$/, MX:/^\d{5}$/, DO:/^\d{5}$/, PR:/^00[6-9]\d{2}$/, JP:/^\d{3}-\d{4}$/ };
+  ES:/^(0[1-9]|[1-4]\d|5[0-2])\d{3}$/, IT:/^\d{5}$/, NL:/^[1-9]\d{3}(?!SA|SD|SS)[A-Z]{2}$/, SE:/^\d{3}\d{2}$/, BR:/^\d{5}-\d{3}$/, HU:/^[1-9]\d{3}$/, NO:/^\d{4}$/, PT:/^\d{4}-\d{3}$/, FI:/^\d{5}$/, AT:/^\d{4}$/, BE:/^[1-9]\d{3}$/, CZ:/^\d{5}$/, DK:/^\d{4}$/, GR:/^\d{5}$/, LU:/^\d{4}$/, PL:/^\d{2}-\d{3}$/, RO:/^\d{6}$/, SI:/^\d{4}$/, AR:/^\d{4}$/, CL:/^\d{7}$/, MX:/^\d{5}$/, DO:/^\d{5}$/, PR:/^00[6-9]\d{2}$/, CH:/^\d{4}$/, RU:/^\d{6}$/, KZ:/^\d{6}$/, JP:/^\d{3}-\d{4}$/ };
 let bad = 0, total = 0;
 for (const code of Object.keys(L.LOCALES)) {
   const cc = code.slice(-2), Lc = L.LOCALES[code];
