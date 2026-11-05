@@ -56,6 +56,18 @@ const TAX = {
         const cs='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let s=0;
         [...base].forEach((ch,i)=>{ const p = cs.indexOf(ch)*(i%2?2:1); s += Math.floor(p/36)+p%36; });
         return {label:'GSTIN', value:base+cs[(36-s%36)%36]}; },
+  AR(){ for(;;){ const b = pick(['30','33','34'])+digits(8); const c = 11-wsum(b,[5,4,3,2,7,6,5,4,3,2])%11;   // CUIT, mod 11
+          if (c!==10) return {label:'CUIT', value:b+(c===11?0:c)}; } },
+  CL(){ const b = '76'+digits(6); let s=0; [...b].reverse().forEach((ch,i)=>{ s += +ch * (2 + i%6); }); const m = 11-s%11;   // RUT, mod 11 (K = 10)
+        return {label:'RUT', value:b+(m===11?'0':m===10?'K':m)}; },
+  MX(){ const A = n => Array.from({length:n},()=>String.fromCharCode(65+rnd(26))).join('');
+        const p2 = n => String(n).padStart(2,'0'), hk = Array.from({length:2},()=>'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[rnd(36)]).join('');
+        const base = A(3)+p2(num(0,99))+p2(num(1,12))+p2(num(1,28))+hk;   // persona moral RFC: 3 letters + YYMMDD + homoclave
+        const T = '0123456789ABCDEFGHIJKLMN&OPQRSTUVWXYZ Ñ', pad = ' '+base; let s=0;
+        for (let i=0;i<12;i++) s += T.indexOf(pad[i])*(13-i);
+        const d = 11-s%11; return {label:'RFC (IVA)', value:base+(d===11?'0':d===10?'A':d)}; },
+  DO(){ const b = '1'+digits(7); const r = wsum(b,[7,9,8,6,5,4,3,2])%11; return {label:'RNC', value:b+(r===0?2:r===1?1:11-r)}; },
+  PR(){ return TAX.US(); },
   AT(){ const b = String(num(1,7))+digits(6); let s=0;
         [...b].forEach((ch,i)=>{ let n=+ch; if(i%2===1){ n*=2; if(n>9)n-=9; } s+=n; });
         return {label:'UID-Nummer (VAT)', value:'ATU'+b+((10-(s+4)%10)%10)}; },
@@ -142,6 +154,26 @@ const LOCALES = {
     name:()=>pick(['Restaurang Smak','Krogen Björken','Bistro Norden','Matsalen','Café Fika','Kök & Bar Havet','Gastro Stockholm','Wärdshuset Ekan','Matbaren','Smörgåsen']),
     street:()=>`${pick(['Stor','Drottning','Kung','Kyrk','Järn','Skol','Vasa','Hamn','Bergs','Ringvägen'])}${pick(['gatan','vägen','torget','allén'])} ${num(1,140)}`,
     cities:[['Stockholm','Stockholms län','11# ##'],['Göteborg','Västra Götaland','41# ##'],['Malmö','Skåne','21# ##'],['Uppsala','Uppsala län','75# ##']] },
+  es_AR:{ country:'Argentina', tax:'AR', style:'D', phone:'11 5555 ####',
+    name:()=>pick(['Parrilla El Gaucho','La Cantina del Puerto','Café Palermo','Restaurante El Asador','Bodegón San Telmo','Pizzería La Esquina','Parrilla La Estancia','Rotisería El Palenque','Confitería La Plaza','Cervecería La Costanera']),
+    street:()=>`${pick(['Avenida','Calle'])} ${pick(['Corrientes','Santa Fe','Rivadavia','San Martín','Belgrano','Libertador','Mitre','9 de Julio','Sarmiento','Alvear'])} ${num(1,5000)}`,
+    cities:[['Buenos Aires','Ciudad Autónoma de Buenos Aires','1###'],['Córdoba','Córdoba','50##'],['Rosario','Santa Fe','20##'],['Mendoza','Mendoza','55##'],['La Plata','Buenos Aires','19##']] },
+  es_CL:{ country:'Chile', tax:'CL', style:'D', phone:'2 2555 ####',
+    name:()=>pick(['Restaurante El Parrón','Picada Don Lucho','Café Valparaíso','Marisquería El Puerto','Cocinería La Rueda','Restaurante Cordillera','Bar Central','Casa del Pastel de Choclo','Sándwichería El Lomito','Fuente Pacífico']),
+    street:()=>`${pick(['Calle','Avenida','Pasaje'])} ${pick(['Providencia','Libertador Bernardo O’Higgins','Los Leones','Condell','Pedro de Valdivia','Arturo Prat','Manuel Montt','Vicuña Mackenna','Irarrázaval','Las Condes'])} ${num(1,3500)}`,
+    cities:[['Santiago','Región Metropolitana','8######'],['Valparaíso','Valparaíso','23#####'],['Concepción','Biobío','40#####'],['Antofagasta','Antofagasta','12#####'],['Viña del Mar','Valparaíso','25#####']] },
+  es_MX:{ country:'México', tax:'MX', style:'D', phone:'55 5555 ####',
+    name:()=>pick(['Taquería El Güero','Restaurante La Hacienda','Cantina Los Arcos','Fonda Doña Lupe','Mariscos El Puerto','Cocina Oaxaqueña','Tacos El Primo','Antojitos La Abuela','Restaurante Casa Azul','Pozolería El Fogón']),
+    street:()=>`${pick(['Calle','Avenida','Paseo'])} ${pick(['Reforma','Insurgentes','Juárez','Hidalgo','Morelos','Revolución','Madero','Independencia','Allende','Guerrero'])} ${num(1,999)}`,
+    cities:[['Ciudad de México','Ciudad de México','0####'],['Guadalajara','Jalisco','44###'],['Monterrey','Nuevo León','64###'],['Puebla','Puebla','72###'],['Querétaro','Querétaro','76###']] },
+  es_DO:{ country:'República Dominicana', tax:'DO', style:'D', phone:'809 555 ####',
+    name:()=>pick(['Restaurante El Conuco','Comedor Doña Carmen','Pica Pollo El Rey','Marisquería Playa Dorada','Café Colonial','Cafetería La Esquina','Restaurante Sabor Criollo','Parrillada El Malecón','Colmado Don Pepe','Sancocho de la Abuela']),
+    street:()=>`${pick(['Calle','Avenida'])} ${pick(['Duarte','Máximo Gómez','Winston Churchill','Abraham Lincoln','Independencia','27 de Febrero','Sarasota','Mella','Sánchez','Luperón'])} ${num(1,300)}`,
+    cities:[['Santo Domingo','Distrito Nacional','101##'],['Santiago de los Caballeros','Santiago','51000'],['Puerto Plata','Puerto Plata','57000'],['La Romana','La Romana','22000'],['Punta Cana','La Altagracia','23000']] },
+  es_PR:{ country:'Puerto Rico', tax:'PR', style:'A', phone:'787 555 ####',
+    name:()=>pick(['Restaurante El Yunque','Fonda La Criolla','Lechonera Los Amigos','Cafetería El Viejo San Juan','Mofongo y Más','Restaurante Playa Azul','Kiosco La Parguera','Panadería La Borinqueña','Marisquería El Faro','Cocina Tradicional']),
+    street:()=>`${pick(['Calle','Avenida','Paseo'])} ${pick(['Luna','San Francisco','Fortaleza','Ponce de León','Muñoz Rivera','Condado','Loíza','Cristo','Sol','Tetuán'])} ${num(1,999)}`,
+    cities:[['San Juan','PR','009##'],['Ponce','PR','007##'],['Mayagüez','PR','006##'],['Caguas','PR','007##'],['Bayamón','PR','009##']] },
   de_AT:{ country:'Österreich', tax:'AT', style:'D', phone:'01 555 ####',
     name:()=>pick(['Gasthaus zum Goldenen Hirschen','Wirtshaus Zur Linde','Café Central','Gasthof Zum Löwen','Heuriger Huber','Stüberl am Eck','Landgasthaus Alpenblick','Beisl Zum Schwarzen Adler','Restaurant Donaublick','Kaffeehaus Wien']),
     street:()=>`${pick(['Haupt','Bahnhof','Mariahilfer','Linzer','Kärntner','Schubert','Mozart','Rathaus','Garten','Kirchen'])}${pick(['straße','gasse','platz','weg'])} ${num(1,150)}`,
@@ -377,6 +409,16 @@ const POSTAL = {
   sv_SE:{ 'Stockholm':['111 20','111 21','111 22','111 29','111 30','111 51','114 32','114 35','118 20','118 46','117 43'],
     'Göteborg':['411 01','411 05','411 11','411 18','413 01','414 51'], 'Malmö':['211 11','211 20','211 22','211 34','212 11'],
     'Uppsala':['753 10','753 20','752 37'], 'Linköping':['582 22','582 24','582 25'], 'Örebro':['702 11','702 22','703 61'], 'Umeå':['903 29','903 32','901 87'] },
+  es_AR:{ 'Buenos Aires':W5('1002 1003 1004 1005 1006 1007 1010 1020 1043 1049 1425 1428'), 'Córdoba':W5('5000 5001 5002 5003 5004 5008'),
+    'Rosario':W5('2000 2002 2003 2005'), 'Mendoza':W5('5500 5501 5502 5503'), 'La Plata':W5('1900 1902 1904 1906') },
+  es_CL:{ 'Santiago':W5('8320000 8330000 8340000 8350000 7500000 7510000 7550000'), 'Valparaíso':W5('2340000 2350000 2360000'),
+    'Concepción':W5('4030000 4070000 4080000'), 'Antofagasta':W5('1240000 1270000'), 'Viña del Mar':W5('2520000 2530000 2540000') },
+  es_MX:{ 'Ciudad de México':W5('06000 06010 06100 06600 11000 03100 04100'), 'Guadalajara':W5('44100 44160 44600 45040'),
+    'Monterrey':W5('64000 64060 64620 66220'), 'Puebla':W5('72000 72160 72570'), 'Querétaro':W5('76000 76010 76020 76030') },
+  es_DO:{ 'Santo Domingo':W5('10101 10102 10104 10105 10106'), 'Santiago de los Caballeros':['51000'], 'Puerto Plata':['57000'],
+    'La Romana':['22000'], 'Punta Cana':['23000'] },
+  es_PR:{ 'San Juan':W5('00901 00907 00909 00911 00918 00926'), 'Ponce':W5('00716 00717 00728 00730 00731'), 'Mayagüez':W5('00680 00681 00682'),
+    'Caguas':W5('00725 00726 00727'), 'Bayamón':W5('00956 00957 00959 00961') },
   de_AT:{ 'Wien':W5('1010 1020 1030 1040 1050 1060 1070 1080 1090 1100 1120 1150 1200'), 'Graz':W5('8010 8020 8036 8041 8042 8045'),
     'Linz':W5('4020 4030 4040 4020'), 'Salzburg':W5('5020 5026 5071'), 'Innsbruck':W5('6020 6010 6063') },
   nl_BE:{ 'Antwerpen':W5('2000 2018 2020 2030 2050 2060'), 'Gent':W5('9000 9030 9040 9050 9051 9052'),
@@ -454,8 +496,8 @@ const NAMES = {
   pt:{f:['João','Maria','Pedro','Ana','Lucas','Beatriz','Rafael','Camila','Gustavo','Juliana'],l:['Silva','Santos','Oliveira','Souza','Pereira','Costa','Rodrigues','Almeida','Nascimento','Lima']},
   ja:{f:['太郎','花子','健太','美咲','大輔','陽子','翔','愛','直樹','由美'],l:['佐藤','鈴木','高橋','田中','伊藤','渡辺','山本','中村','小林','加藤']},
 };
-const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it_IT:'it', nl_NL:'nl', sv_SE:'sv', hu_HU:'hu', nb_NO:'no', fi_FI:'fi', de_AT:'de', nl_BE:'nl', cs_CZ:'cs', da_DK:'da', el_GR:'el', fr_LU:'fr', pl_PL:'pl', ro_RO:'ro', sl_SI:'sl', pt_PT:'pt', pt_BR:'pt', ja_JP:'ja'};
-const ALIASES = {en_NO:'nb_NO', en_HU:'hu_HU', en_PT:'pt_PT', en_FI:'fi_FI', en_AT:'de_AT', en_BE:'nl_BE', en_CZ:'cs_CZ', en_DK:'da_DK', en_GR:'el_GR', en_LU:'fr_LU', en_PL:'pl_PL', en_RO:'ro_RO', en_SI:'sl_SI'};   // English-style codes accepted as exact matches
+const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it_IT:'it', nl_NL:'nl', sv_SE:'sv', hu_HU:'hu', nb_NO:'no', fi_FI:'fi', de_AT:'de', es_AR:'es', es_CL:'es', es_MX:'es', es_DO:'es', es_PR:'es', nl_BE:'nl', cs_CZ:'cs', da_DK:'da', el_GR:'el', fr_LU:'fr', pl_PL:'pl', ro_RO:'ro', sl_SI:'sl', pt_PT:'pt', pt_BR:'pt', ja_JP:'ja'};
+const ALIASES = {en_NO:'nb_NO', en_HU:'hu_HU', en_PT:'pt_PT', en_FI:'fi_FI', en_AT:'de_AT', en_BE:'nl_BE', en_CZ:'cs_CZ', en_DK:'da_DK', en_GR:'el_GR', en_LU:'fr_LU', en_PL:'pl_PL', en_RO:'ro_RO', en_SI:'sl_SI', en_AR:'es_AR', en_CL:'es_CL', en_MX:'es_MX', en_DO:'es_DO', en_PR:'es_PR'};   // English-style codes accepted as exact matches
 const ascii = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z]/g,'').toLowerCase();
 function person(code){
   const n = NAMES[NAME_SET[code] || 'en'], first = pick(n.f), last = pick(n.l);
