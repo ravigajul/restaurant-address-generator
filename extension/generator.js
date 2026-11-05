@@ -40,7 +40,7 @@ const TAX = {
         for (const ch of b){ let s=(+ch+p)%10; if(s===0)s=10; p=(2*s)%11; }
         let c=11-p; if(c===10)c=0; return {label:'USt-IdNr. (VAT ID)', value:'DE'+b+c}; },
   FR(){ const b = digits(8); const siren = b+luhnCheck(b); const key = (12 + 3*(+siren % 97)) % 97;
-        return {label:'N° TVA intracommunautaire', value:'FR'+String(key).padStart(2,'0')+siren}; },
+        return {label:'No. TVA intracommunautaire', value:'FR'+String(key).padStart(2,'0')+siren}; },
   ES(){ const b = String(num(1,9))+digits(6); // CIF type B (S.L.), 2-digit province + 5 digits
         const prov = String(num(1,52)).padStart(2,'0'); const d = prov+digits(5); let s=0;
         [...d].forEach((ch,i)=>{ let n=+ch; if(i%2===0){ n*=2; if(n>9)n-=9; } s+=n; });
@@ -339,6 +339,14 @@ const EXTRA_CITIES = {
   ja_JP:[['Nagoya','Aichi','460-####'],['Fukuoka','Fukuoka','810-####'],['Yokohama','Kanagawa','231-####'],['Hiroshima','Hiroshima','730-####']],
 };
 for (const k in EXTRA_CITIES) LOCALES[k].cities.push(...EXTRA_CITIES[k]);
+/* ---------- plain-English output: strip accents and special letters (Søndre -> Sondre, Straße -> Strasse) ---------- */
+const PLAIN_MAP = {'ø':'o','Ø':'O','æ':'ae','Æ':'AE','œ':'oe','Œ':'OE','ß':'ss','ð':'d','Ð':'D','þ':'th','Þ':'Th','ł':'l','Ł':'L','đ':'d','Đ':'D','ı':'i','’':"'",'‘':"'",'–':'-','—':'-','°':''};
+const DE_MAP = {'ä':'ae','ö':'oe','ü':'ue','Ä':'Ae','Ö':'Oe','Ü':'Ue'};   // German-language locales use the standard ae/oe/ue spelling
+const plain = (s, code) => { const de = /^de_/.test(code || '');
+  return String(s).replace(/[^\u0000-\u007F]/g, ch => (de && DE_MAP[ch]) || (ch in PLAIN_MAP ? PLAIN_MAP[ch] : ch)).normalize('NFD').replace(/[̀-ͯ]/g, ''); };
+for (const k in LOCALES) LOCALES[k].code = k;
+
+
 
 /* full names for abbreviated regions (used for labels and for dropdowns that list full names) */
 const REGION_NAMES = {};
@@ -350,9 +358,9 @@ const _RN = ({ US:{NY:'New York',CA:'California',IL:'Illinois',TX:'Texas',WA:'Wa
 
 for (const cc in _RN) for (const ab in _RN[cc]) REGION_NAMES[cc+'_'+ab] = _RN[cc][ab];
 
-const regionOf = (L, c) => c[1];
+const regionOf = (L, c) => plain(c[1], L.code);
 function regionsFor(code){ const L = LOCALES[code]; return [...new Set(L.cities.map(c => regionOf(L, c)))].sort((a,b) => a.localeCompare(b)); }
-function regionLabel(code, r){ const n = REGION_NAMES[code.slice(-2)+'_'+r]; return n && n !== r ? `${r} — ${n}` : r; }
+function regionLabel(code, r){ const n = REGION_NAMES[code.slice(-2)+'_'+r]; return n && plain(n, code) !== r ? `${r} — ${plain(n, code)}` : r; }
 
 
 function resolveRegion(code, text){          // '' = any; null = not recognised
@@ -609,7 +617,7 @@ const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it
 const ALIASES = {en_NO:'nb_NO', en_HU:'hu_HU', en_PT:'pt_PT', en_FI:'fi_FI', en_AT:'de_AT', en_BE:'nl_BE', en_CZ:'cs_CZ', en_DK:'da_DK', en_GR:'el_GR', en_LU:'fr_LU', en_PL:'pl_PL', en_RO:'ro_RO', en_SI:'sl_SI', en_AR:'es_AR', en_CL:'es_CL', en_MX:'es_MX', en_DO:'es_DO', en_PR:'es_PR', en_CH:'de_CH', en_RU:'ru_RU', en_KZ:'ru_KZ', en_CN:'zh_CN', en_TW:'zh_TW', en_KR:'ko_KR'};   // English-style codes accepted as exact matches
 const ascii = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z]/g,'').toLowerCase();
 function person(code){
-  const n = NAMES[NAME_SET[code] || 'en'], first = pick(n.f), last = pick(n.l);
+  const n = NAMES[NAME_SET[code] || 'en'], first = plain(pick(n.f), code), last = plain(pick(n.l), code);
   const a = ascii(first), b = ascii(last);
   const email = (a && b ? `${a}.${b}` : `guest${digits(4)}`) + num(10,99) + '@example.com';  // example.com is reserved for documentation
   return { first, last, email };
@@ -641,7 +649,8 @@ function generate(code, region){
     const city = c[0];
     const f = { name: L.name(), street: L.street(), city, region:'', postal: postalFor(code, c), country: L.country };
     f.region = c[1];
-    const tax = TAX[L.tax]({gst:c[3]}); tax.value = tax.value.replace(/[^A-Za-z0-9]/g, ""); // strip dashes/spaces/dots/slashes
+    for (const k of ['name','street','city','region','country']) f[k] = plain(f[k], code);
+    const tax = TAX[L.tax]({gst:c[3]}); tax.label = plain(tax.label, code); tax.value = tax.value.replace(/[^A-Za-z0-9]/g, ""); // strip dashes/spaces/dots/slashes
     const phone = fill(L.phone).replace(/\D/g,'');   // national number, digits only (no country code)
     const full = assemble(L, f);          // full address keeps the natural spacing
     f.postal = f.postal.replace(/\s/g, '');   // standalone postal-code field: no spaces
