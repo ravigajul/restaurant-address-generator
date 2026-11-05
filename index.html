@@ -798,7 +798,7 @@ function render(){
     ['Restaurant', r.f.name], ['Full address', r.full, 'full'], ['Street', r.f.street], ['City', r.f.city],
     ['State / Region', r.f.region], ['Postal code', r.f.postal], ['Country', r.f.country],
     ['Phone (no country code)', r.phone], [r.tax.label, r.tax.value],
-    ['First name', r.who.first], ['Last name', r.who.last], ['Email', r.who.email],
+    ['First name', r.who.first], ['Last name', r.who.last], ['Account creator', r.who.first], ['Email', r.who.email],
   ];
   const out = $('out'); out.innerHTML = '';
   for (const [k,v,cls] of rows){
@@ -827,7 +827,7 @@ $('loc').addEventListener('input', () => { const c = normalize($('loc').value); 
 $('f').addEventListener('submit', e => { e.preventDefault(); render(); });
 $('copyAll').addEventListener('click', async () => {
   if (!current) return; const {r} = current;
-  const t = [r.f.name, r.full, `Phone: ${r.phone}`, `${r.tax.label}: ${r.tax.value}`, `${r.who.first} ${r.who.last}`, r.who.email].join('\n');
+  const t = [r.f.name, r.full, `Phone: ${r.phone}`, `${r.tax.label}: ${r.tax.value}`, `${r.who.first} ${r.who.last}`, `Account creator: ${r.who.first}`, r.who.email].join('\n');
   toast((await copyText(t)) ? 'Copied everything ✓' : 'Copy failed');
 });
 $('copyLink').addEventListener('click', async () => {

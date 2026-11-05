@@ -57,7 +57,7 @@ const extId=crypto.createHash('sha256').update(EXT).digest('hex').slice(0,32).re
    console.log('  popup:',msg.replace(/\n/g,' | ')); check(!errs.length,'no popup errors');
    check(vals['given-name']===R(rows,'First name')&&vals['family-name']===R(rows,'Last name'),'names');
    check(/@example\.com$/.test(vals.user_email),'email'); check(vals.mobile===R(rows,'Phone (no code)')&&/^\d+$/.test(vals.mobile),'phone '+vals.mobile);
-   check(vals.company===R(rows,'Restaurant'),'company'); check(vals.street===R(rows,'Street'),'street'); check(vals.postcode===R(rows,'Postal code'),'postcode '+vals.postcode);
+   check(vals.company===R(rows,'Restaurant'),'company'); check(vals.account_creator===R(rows,'First name')&&R(rows,'Account creator')===R(rows,'First name'),'account creator = first name: '+vals.account_creator); check(vals.street===R(rows,'Street'),'street'); check(vals.postcode===R(rows,'Postal code'),'postcode '+vals.postcode);
    check(vals.town===R(rows,'City'),'town'); check(vals.region===R(rows,'State/Region'),'region text '+vals.region);
    check(vals.vat===rows.at(-1)[1],'vat '+vals.vat); check(vals.username==='','username untouched');
  }

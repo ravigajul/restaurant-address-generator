@@ -28,8 +28,8 @@ function render(){
   const r = generate(code, region), cc = code.slice(-2);
   data = { name:r.f.name, full:r.full, street:r.f.street, city:r.f.city, region:r.f.region, postal:r.f.postal,
            country:r.f.country, countryEn:EN[cc], countryCode:cc, phone:r.phone, tax:r.tax.value, taxLabel:r.tax.label,
-           first:r.who.first, last:r.who.last, email:r.who.email };
-  const rows = [['First name',data.first],['Last name',data.last],['Email',data.email],['Phone (no code)',data.phone],
+           first:r.who.first, last:r.who.last, creator:r.who.first, email:r.who.email };
+  const rows = [['First name',data.first],['Last name',data.last],['Account creator',data.creator],['Email',data.email],['Phone (no code)',data.phone],
     ['Restaurant',data.name],['Full address',data.full],['Street',data.street],['City',data.city],
     ['State/Region',data.region],['Postal code',data.postal],['Country',data.country],[data.taxLabel,data.tax]];
   $('out').innerHTML = '';
@@ -50,6 +50,7 @@ async function fillPage(d, states){
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const rules = [
     ['email', /e-?mail/i],
+    ['creator',/account.?creator|created.?by|\bcreator\b/i],
     ['first', /first.?name|given.?name|fname|forename|first$/i],
     ['last',  /last.?name|sur.?name|family.?name|lname|last$/i],
     ['person',/full.?name|contact.?(person|name)|your.?name|owner.?name|cardholder|^name$/i],
@@ -128,7 +129,7 @@ async function fillPage(d, states){
   const flash = el => { el.style.outline = '2px solid #1b7f4b'; el.style.outlineOffset = '1px';
     setTimeout(() => { el.style.outline = ''; el.style.outlineOffset = ''; }, 1800); };
   const values = { name:d.name, full:d.full, street:d.street, city:d.city, region:d.region, postal:d.postal, phone:d.phone, tax:d.tax,
-                   country:d.country, first:d.first, last:d.last, email:d.email, person:`${d.first} ${d.last}` };
+                   country:d.country, first:d.first, last:d.last, creator:d.creator || d.first, email:d.email, person:`${d.first} ${d.last}` };
 
   async function fillOne(el, key){
     if (el.tagName === 'SELECT'){
