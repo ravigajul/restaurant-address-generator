@@ -2,7 +2,7 @@
 (() => { // own scope: generator.js already defines helpers like `fill`
 const $ = id => document.getElementById(id);
 const EN = { US:'United States', CA:'Canada', GB:'United Kingdom', AU:'Australia', NZ:'New Zealand', IE:'Ireland', IN:'India',
-  DE:'Germany', FR:'France', ES:'Spain', IT:'Italy', NL:'Netherlands', SE:'Sweden', HU:'Hungary', NO:'Norway', PT:'Portugal', FI:'Finland', AT:'Austria', BE:'Belgium', CZ:'Czechia', DK:'Denmark', GR:'Greece', LU:'Luxembourg', PL:'Poland', RO:'Romania', SI:'Slovenia', AR:'Argentina', CL:'Chile', MX:'Mexico', DO:'Dominican Republic', PR:'Puerto Rico', CH:'Switzerland', RU:'Russia', KZ:'Kazakhstan', BR:'Brazil', JP:'Japan' };
+  DE:'Germany', FR:'France', ES:'Spain', IT:'Italy', NL:'Netherlands', SE:'Sweden', HU:'Hungary', NO:'Norway', PT:'Portugal', FI:'Finland', AT:'Austria', BE:'Belgium', CZ:'Czechia', DK:'Denmark', GR:'Greece', LU:'Luxembourg', PL:'Poland', RO:'Romania', SI:'Slovenia', AR:'Argentina', CL:'Chile', MX:'Mexico', DO:'Dominican Republic', PR:'Puerto Rico', CH:'Switzerland', RU:'Russia', KZ:'Kazakhstan', CN:'China', HK:'Hong Kong', MO:'Macau', TW:'Taiwan', KR:'South Korea', BR:'Brazil', JP:'Japan' };
 let data = null;
 
 function normalize(s){

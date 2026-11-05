@@ -142,6 +142,16 @@ const TAX = {
         const cs='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let s=0;
         [...base].forEach((ch,i)=>{ const p = cs.indexOf(ch)*(i%2?2:1); s += Math.floor(p/36)+p%36; });
         return {label:'GSTIN', value:base+cs[(36-s%36)%36]}; },
+  CN(city){ const AL='0123456789ABCDEFGHJKLMNPQRTUWXY', org = digits(8); const m = 11-wsum(org,[3,7,9,10,5,8,4,2])%11;   // USCC: org code mod 11, then mod 31
+        const b = '91'+city.gst+org+(m===11?'0':m===10?'X':m); let s=0;
+        [...b].forEach((ch,i)=>{ s += AL.indexOf(ch)*[1,3,9,27,19,26,16,17,20,29,25,13,8,24,10,30,28][i]; });
+        return {label:'统一社会信用代码 (USCC)', value:b+AL[(31-s%31)%31]}; },
+  HK(){ return {label:'Business Registration No. (BR)', value:digits(8)}; },   // no VAT/GST in Hong Kong; format only
+  MO(){ return {label:'Taxpayer No. (Contribuinte)', value:digits(7)}; },      // no VAT/GST in Macau; format only
+  TW(){ const b = digits(7); let s=0; [...b].forEach((ch,i)=>{ const p=(+ch)*[1,2,1,2,1,2,4,1][i]; s+=Math.floor(p/10)+p%10; });
+        return {label:'統一編號 (VAT)', value:b+((5-s%5)%5+5*rnd(2))}; },
+  KR(){ const b = pick(['101','104','105','106','107','108','109','110','113','114','117','120','123','129','134'])+pick(['81','85','86','87'])+digits(4);
+        const s = wsum(b,[1,3,7,1,3,7,1,3,5])+Math.floor(+b[8]*5/10); return {label:'사업자등록번호', value:b+((10-s%10)%10)}; },
   CH(){ for(;;){ const b = String(num(1,9))+digits(7); const c = 11-wsum(b,[5,4,3,2,7,6,5,4])%11;   // UID, mod 11
           if (c!==10) return {label:'MWST-Nr. (UID)', value:'CHE'+b+(c===11?0:c)+'MWST'}; } },
   RU(){ const b = pick(['77','78','50','66','54'])+digits(7); return {label:'ИНН', value:b+((wsum(b,[2,4,10,3,5,9,4,6,8])%11)%10)}; },
@@ -247,6 +257,26 @@ const LOCALES = {
     name:()=>pick(['Restaurang Smak','Krogen Björken','Bistro Norden','Matsalen','Café Fika','Kök & Bar Havet','Gastro Stockholm','Wärdshuset Ekan','Matbaren','Smörgåsen']),
     street:()=>`${pick(['Stor','Drottning','Kung','Kyrk','Järn','Skol','Vasa','Hamn','Bergs','Ringvägen'])}${pick(['gatan','vägen','torget','allén'])} ${num(1,140)}`,
     cities:[['Stockholm','Stockholms län','11# ##'],['Göteborg','Västra Götaland','41# ##'],['Malmö','Skåne','21# ##'],['Uppsala','Uppsala län','75# ##']] },
+  zh_CN:{ country:'中国', tax:'CN', style:'Z', phone:'010 5555 ####',
+    name:()=>pick(['老北京火锅','川味轩','江南小馆','点心坊','福满楼','香辣蟹','食为天','客家小厨','聚福园','麻辣烫之家']),
+    street:()=>`${pick(['中山','解放','人民','建设','文化','和平','新华','朝阳','长安','滨江'])}${pick(['路','大道','街'])}${num(1,200)}号`,
+    cities:[['北京市','北京市','1000##','110105'],['上海市','上海市','2000##','310115'],['广州市','广东省','5106##','440106'],['深圳市','广东省','5180##','440305'],['成都市','四川省','6100##','510104']] },
+  en_HK:{ country:'Hong Kong', tax:'HK', style:'H', phone:'2555 ####',
+    name:()=>pick(['Golden Lotus Cha Chaan Teng','Lucky Wok Kitchen','Harbour View Dim Sum','Jade Garden Congee','Dragon Gate Noodles','Victoria Roast Goose','Kowloon Tea House','Lantern Hot Pot','Pearl Bay Seafood','Red Lantern Bistro']),
+    street:()=>`Unit ${num(1,20)}, ${num(1,40)}/F, ${num(1,300)} ${pick(['Nathan','Queen’s','Hennessy','Des Voeux','Jaffe','Canton','Lockhart','Hollywood','Argyle','Wellington'])} ${pick(['Road','Street'])}`,
+    cities:[['Central','Hong Kong Island','999077'],['Causeway Bay','Hong Kong Island','999077'],['Tsim Sha Tsui','Kowloon','999077'],['Mong Kok','Kowloon','999077'],['Sha Tin','New Territories','999077']] },
+  en_MO:{ country:'Macau', tax:'MO', style:'H', phone:'2855 ####',
+    name:()=>pick(['Restaurante Lusitano','Casa de Pasto Macau','Tasca do Porto','Dim Sum Garden','Café Sol Nascente','Congee House','Cotai Hot Pot','Restaurante Sabor de Macau','Pastelaria Doce Lar','Noodle Pavilion']),
+    street:()=>`${pick(['Avenida da Praia Grande','Rua da Felicidade','Avenida de Almeida Ribeiro','Rua de São Paulo','Avenida de Sidónio Pais','Rua do Campo','Avenida do Infante D. Henrique','Rua Central'])} ${num(1,300)}`,
+    cities:[['Macau Peninsula','Macau Peninsula','999078'],['Taipa','Taipa','999078'],['Cotai','Cotai','999078'],['Coloane','Coloane','999078']] },
+  zh_TW:{ country:'臺灣', tax:'TW', style:'Z', phone:'02 5555 ####',
+    name:()=>pick(['老張牛肉麵','祥記小館','夜市小吃','阿財魯肉飯','古早味小吃部','滿福樓','鹽酥雞專賣','珍珠奶茶屋','客家小炒','海產熱炒']),
+    street:()=>`${pick(['中山','中正','忠孝','民生','信義','和平','復興','民權','中華','成功'])}${pick(['路','街'])}${num(1,200)}號`,
+    cities:[['臺北市','臺北市','1##'],['新北市','新北市','2##'],['臺中市','臺中市','4##'],['高雄市','高雄市','8##'],['臺南市','臺南市','7##']] },
+  ko_KR:{ country:'대한민국', tax:'KR', style:'K', phone:'02 5555 ####',
+    name:()=>pick(['한우마을','서울식당','맛나분식','할머니손칼국수','불고기하우스','참치횟집','고향집','소문난 순대국','착한 설렁탕','바다횟집']),
+    street:()=>`${pick(['세종대로','테헤란로','월드컵로','해운대해변로','중앙로','동명로','대학로','번영로','올림픽로','강변로'])} ${num(1,300)}`,
+    cities:[['중구','서울특별시','04###'],['강남구','서울특별시','06###'],['마포구','서울특별시','04###'],['해운대구','부산광역시','48###'],['수성구','대구광역시','42###'],['남동구','인천광역시','21###']] },
   de_CH:{ country:'Schweiz', tax:'CH', style:'D', phone:'044 555 ## ##',
     name:()=>pick(['Restaurant Zum Goldenen Kreuz','Gasthof Bären','Café Bahnhof','Wirtshaus Zur Sonne','Stübli am See','Restaurant Alpenblick','Brasserie Central','Landgasthof Rössli','Beizli Zum Löwen','Gasthaus Adler']),
     street:()=>`${pick(['Bahnhof','Haupt','Dorf','Kirch','Schul','See','Mühle','Berg','Linden','Rosen'])}${pick(['strasse','weg','gasse','platz'])} ${num(1,150)}`,
@@ -514,6 +544,14 @@ const POSTAL = {
   sv_SE:{ 'Stockholm':['111 20','111 21','111 22','111 29','111 30','111 51','114 32','114 35','118 20','118 46','117 43'],
     'Göteborg':['411 01','411 05','411 11','411 18','413 01','414 51'], 'Malmö':['211 11','211 20','211 22','211 34','212 11'],
     'Uppsala':['753 10','753 20','752 37'], 'Linköping':['582 22','582 24','582 25'], 'Örebro':['702 11','702 22','703 61'], 'Umeå':['903 29','903 32','901 87'] },
+  zh_CN:{ '北京市':W5('100000 100010 100020 100022 100025 100101'), '上海市':W5('200000 200030 200040 200120 200122 200135'),
+    '广州市':W5('510000 510620 510630 510075'), '深圳市':W5('518000 518026 518052 518057'), '成都市':W5('610000 610016 610041 610066') },
+  en_HK:{ 'Central':['999077'], 'Causeway Bay':['999077'], 'Tsim Sha Tsui':['999077'], 'Mong Kok':['999077'], 'Sha Tin':['999077'] },
+  en_MO:{ 'Macau Peninsula':['999078'], 'Taipa':['999078'], 'Cotai':['999078'], 'Coloane':['999078'] },
+  zh_TW:{ '臺北市':W5('100 103 104 105 106 110 114'), '新北市':W5('220 231 235 241 242'), '臺中市':W5('400 403 404 406 407'),
+    '高雄市':W5('800 802 806 807 811'), '臺南市':W5('700 701 702 704 710') },
+  ko_KR:{ '중구':W5('04524 04526'), '강남구':W5('06164 06236 06292'), '마포구':W5('04107 04066'), '해운대구':W5('48058 48093'),
+    '수성구':W5('42251 42115'), '남동구':W5('21554 21555') },
   de_CH:{ 'Zürich':W5('8001 8002 8003 8004 8005 8006 8008 8032'), 'Basel':W5('4001 4051 4052 4053 4054 4055'),
     'Bern':W5('3000 3001 3005 3006 3011 3012 3013'), 'Luzern':W5('6003 6004 6005 6006'), 'St. Gallen':W5('9000 9001 9004 9008') },
   ru_RU:{ 'Москва':W5('101000 103132 107023 109012 115054 119019 125009 127006'), 'Санкт-Петербург':W5('190000 191023 191186 195027 197022'),
@@ -594,6 +632,9 @@ const NAMES = {
   es:{f:['Carlos','Lucía','Javier','Marta','Diego','Carmen','Pablo','Elena','Sergio','Paula'],l:['García','Fernández','López','Martínez','Sánchez','Pérez','Gómez','Ruiz','Díaz','Moreno']},
   it:{f:['Luca','Giulia','Marco','Sofia','Matteo','Chiara','Alessandro','Francesca','Davide','Elena'],l:['Rossi','Russo','Ferrari','Esposito','Bianchi','Romano','Colombo','Ricci','Marino','Greco']},
   nl:{f:['Daan','Emma','Sem','Sanne','Lars','Fleur','Bram','Lotte','Thijs','Noor'],l:['de Jong','Jansen','de Vries','van den Berg','Bakker','Visser','Smit','Meijer','Mulder','de Boer']},
+  cn:{f:['Wei','Li','Jun','Yan','Hao','Mei','Lei','Xin','Jie','Ling'],l:['Wang','Li','Zhang','Liu','Chen','Yang','Huang','Zhao','Wu','Zhou']},
+  hk:{f:['Chi Ming','Mei Ling','Wai Keung','Siu Fong','Ka Yan','Tak Wah','Hoi Ying','Man Kit'],l:['Chan','Wong','Lee','Cheung','Lau','Leung','Ho','Ng']},
+  kr:{f:['Min-jun','Seo-yeon','Ji-ho','Ha-eun','Joon-seo','Soo-ah','Dong-hyun','Yu-na'],l:['Kim','Lee','Park','Choi','Jung','Kang','Cho','Yoon']},
   ru:{f:['Aleksandr','Elena','Dmitry','Olga','Sergey','Natalia','Ivan','Anna','Mikhail','Tatiana'],l:['Ivanov','Smirnov','Kuznetsov','Popov','Sokolov','Lebedev','Kozlov','Novikov','Morozov','Volkov']},
   kz:{f:['Aidar','Aigerim','Nurlan','Dana','Yerlan','Aliya','Marat','Madina','Timur','Saule'],l:['Nurpeisov','Akhmetov','Kenzhebayev','Seitkali','Omarov','Dauletov','Zhumabayev','Abdrakhmanov','Mukanov','Sadykov']},
   cs:{f:['Jan','Eva','Petr','Jana','Tomáš','Lucie','Martin','Tereza','Jakub','Kateřina'],l:['Novák','Dvořák','Černý','Procházka','Kučera','Veselý','Horák','Němec','Pokorný','Marek']},
@@ -609,8 +650,8 @@ const NAMES = {
   pt:{f:['João','Maria','Pedro','Ana','Lucas','Beatriz','Rafael','Camila','Gustavo','Juliana'],l:['Silva','Santos','Oliveira','Souza','Pereira','Costa','Rodrigues','Almeida','Nascimento','Lima']},
   ja:{f:['太郎','花子','健太','美咲','大輔','陽子','翔','愛','直樹','由美'],l:['佐藤','鈴木','高橋','田中','伊藤','渡辺','山本','中村','小林','加藤']},
 };
-const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it_IT:'it', nl_NL:'nl', sv_SE:'sv', hu_HU:'hu', nb_NO:'no', fi_FI:'fi', de_AT:'de', es_AR:'es', de_CH:'de', ru_RU:'ru', ru_KZ:'kz', es_CL:'es', es_MX:'es', es_DO:'es', es_PR:'es', nl_BE:'nl', cs_CZ:'cs', da_DK:'da', el_GR:'el', fr_LU:'fr', pl_PL:'pl', ro_RO:'ro', sl_SI:'sl', pt_PT:'pt', pt_BR:'pt', ja_JP:'ja'};
-const ALIASES = {en_NO:'nb_NO', en_HU:'hu_HU', en_PT:'pt_PT', en_FI:'fi_FI', en_AT:'de_AT', en_BE:'nl_BE', en_CZ:'cs_CZ', en_DK:'da_DK', en_GR:'el_GR', en_LU:'fr_LU', en_PL:'pl_PL', en_RO:'ro_RO', en_SI:'sl_SI', en_AR:'es_AR', en_CL:'es_CL', en_MX:'es_MX', en_DO:'es_DO', en_PR:'es_PR', en_CH:'de_CH', en_RU:'ru_RU', en_KZ:'ru_KZ'};   // English-style codes accepted as exact matches
+const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it_IT:'it', nl_NL:'nl', sv_SE:'sv', hu_HU:'hu', nb_NO:'no', fi_FI:'fi', de_AT:'de', es_AR:'es', de_CH:'de', zh_CN:'cn', zh_TW:'cn', en_HK:'hk', en_MO:'hk', ko_KR:'kr', ru_RU:'ru', ru_KZ:'kz', es_CL:'es', es_MX:'es', es_DO:'es', es_PR:'es', nl_BE:'nl', cs_CZ:'cs', da_DK:'da', el_GR:'el', fr_LU:'fr', pl_PL:'pl', ro_RO:'ro', sl_SI:'sl', pt_PT:'pt', pt_BR:'pt', ja_JP:'ja'};
+const ALIASES = {en_NO:'nb_NO', en_HU:'hu_HU', en_PT:'pt_PT', en_FI:'fi_FI', en_AT:'de_AT', en_BE:'nl_BE', en_CZ:'cs_CZ', en_DK:'da_DK', en_GR:'el_GR', en_LU:'fr_LU', en_PL:'pl_PL', en_RO:'ro_RO', en_SI:'sl_SI', en_AR:'es_AR', en_CL:'es_CL', en_MX:'es_MX', en_DO:'es_DO', en_PR:'es_PR', en_CH:'de_CH', en_RU:'ru_RU', en_KZ:'ru_KZ', en_CN:'zh_CN', en_TW:'zh_TW', en_KR:'ko_KR'};   // English-style codes accepted as exact matches
 const ascii = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z]/g,'').toLowerCase();
 function person(code){
   const n = NAMES[NAME_SET[code] || 'en'], first = pick(n.f), last = pick(n.l);
