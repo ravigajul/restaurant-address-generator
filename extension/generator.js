@@ -381,7 +381,8 @@ function generate(code, region){
     if (L.style === 'J'){ f.city = c[0]; f.region = c[1]; } else f.region = c[1];
     const tax = TAX[L.tax]({gst:c[3]}); tax.value = tax.value.replace(/[^A-Za-z0-9]/g, ""); // strip dashes/spaces/dots/slashes
     const phone = fill(L.phone).replace(/\D/g,'');   // national number, digits only (no country code)
-    const full = assemble(L, f);
+    const full = assemble(L, f);          // full address keeps the natural spacing
+    f.postal = f.postal.replace(/\s/g, '');   // standalone postal-code field: no spaces
     const who = person(code);
     const key = f.name + full + tax.value + who.email;
     if (seen.has(key)) continue;
