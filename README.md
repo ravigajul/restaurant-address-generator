@@ -1,5 +1,7 @@
 # Restaurant Address Generator
 
+**Live tool: https://ravigajul.github.io/restaurant-address-generator/**
+
 Static, client-side tool: enter a locale (`en_US`, `en_AU`, `de_DE`, ...) and get a fresh, unique restaurant name, full address, phone and a format- and checksum-valid VAT / tax ID. Click any field to copy it.
 
 Optional **State / Region** box limits the address to cities in that state. Type or pick: `NY`, `ny`, `New York`, `newyork`, `ga`, `Georgia`, or a unique prefix like `wash`. Leave it empty for any state.
