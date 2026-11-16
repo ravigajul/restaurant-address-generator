@@ -20,6 +20,8 @@ function luhnCheck(payload){            // returns check digit to append
 const wsum = (str, w) => [...str].reduce((s,c,i) => s + (+c) * w[i], 0);
 const grp = (s, sizes) => { let o=[],i=0; for (const z of sizes){ o.push(s.slice(i,i+z)); i+=z; } return o.join(' '); };
 
+/* VAT numbers confirmed registered via the EU VIES service (2026-11). Used for DK/HU because live registry checks reject generated numbers. Test environments only. */
+const REAL_VAT = {"DK": ["43912631", "37631078", "26140331", "41801808", "36695196", "40653821", "46230639", "40340009", "35700064", "29750726", "46540190", "42393045", "26696585", "43151495", "38705571", "72383710", "39633574", "31593778", "39119099", "44878585", "30335376", "44800624", "10291747", "31231833", "30003241", "44691604"], "HU": ["24065924", "48127385", "26494924", "53718574", "14396362", "18449118", "23591558", "55910617", "59049337", "57250775", "33121235", "68553993", "66740212", "23553255", "55949613", "25121175", "57348661", "57623803", "43784826", "90310047", "13848323", "52497227", "10901861", "32637926", "23804276", "47110348"]};
 /* ---------- tax / VAT ID generators (valid format + checksum) ---------- */
 const TAX = {
   US(){ const p = pick(['10','12','27','30','32','35','36','37','38','45','46','47','61','65','81','82','83','84','85','86','87','88','91','92','93','98']);
@@ -40,7 +42,8 @@ const TAX = {
         for (const ch of b){ let s=(+ch+p)%10; if(s===0)s=10; p=(2*s)%11; }
         let c=11-p; if(c===10)c=0; return {label:'USt-IdNr. (VAT ID)', value:'DE'+b+c}; },
   FR(){ const b = digits(8); const siren = b+luhnCheck(b); const key = (12 + 3*(+siren % 97)) % 97;
-        return {label:'No. TVA intracommunautaire', value:'FR'+String(key).padStart(2,'0')+siren}; },
+        const nic = digits(4), siret = siren+nic+luhnCheck(siren+nic);   // SIRET: 14 digits, Luhn-valid, same SIREN as the VAT number
+        return {label:'No. TVA intracommunautaire', value:'FR'+String(key).padStart(2,'0')+siren, extra:{label:'SIRET', value:siret}}; },
   ES(){ const b = String(num(1,9))+digits(6); // CIF type B (S.L.), 2-digit province + 5 digits
         const prov = String(num(1,52)).padStart(2,'0'); const d = prov+digits(5); let s=0;
         [...d].forEach((ch,i)=>{ let n=+ch; if(i%2===0){ n*=2; if(n>9)n-=9; } s+=n; });
@@ -99,8 +102,7 @@ const TAX = {
   BE(){ const b = String(rnd(2))+digits(7); return {label:'BTW / TVA-nummer', value:'BE'+b+String(97-(+b%97)).padStart(2,'0')}; },
   CZ(){ const b = String(num(1,8))+digits(6); const a = wsum(b,[8,7,6,5,4,3,2])%11;
         return {label:'DIČ (VAT)', value:'CZ'+b+(a===0?1:a===1?0:11-a)}; },
-  DK(){ for(;;){ const b = String(num(1,9))+digits(6); const c = (11-wsum(b,[2,7,6,5,4,3,2])%11)%11;
-          if (c<10) return {label:'CVR-nummer (moms)', value:'DK'+b+c}; } },
+  DK(){ return {label:'CVR-nummer (moms)', value:'DK'+pick(REAL_VAT.DK)}; },   // registered numbers: checks against VIES / registries reject random ones
   GR(){ const b = String(num(1,9))+digits(7); let s=0; [...b].forEach((ch,i)=>{ s += +ch * 2**(8-i); });
         return {label:'AFM (VAT)', value:'EL'+b+((s%11)%10)}; },
   LU(){ const b = String(num(1,9))+digits(5); return {label:'No. TVA', value:'LU'+b+String(+b%89).padStart(2,'0')}; },
@@ -116,8 +118,7 @@ const TAX = {
           return {label:'NIF (IVA)', value:'PT'+b+c}; } },
   NO(){ for(;;){ const b = String(num(8,9))+digits(7); const r = wsum(b,[3,2,7,6,5,4,3,2])%11; const c = r===0?0:11-r;   // organisasjonsnummer, mod 11
           if (c<10) return {label:'MVA-nummer (VAT)', value:'NO'+b+c+'MVA'}; } },
-  HU(){ const b = String(num(1,9))+digits(6); const c = (10 - wsum(b,[9,7,3,1,9,7,3])%10)%10;   // 8-digit adószám core
-        return {label:'ÁFA-szám (VAT)', value:'HU'+b+c}; },
+  HU(){ return {label:'ÁFA-szám (VAT)', value:'HU'+pick(REAL_VAT.HU)}; },   // registered numbers (see REAL_VAT)
   JP(){ const b = String(num(1,9))+digits(11); let s=0; // 12 digits, Pn counted from right
         for (let n=1;n<=12;n++) s += +b[12-n] * (n%2?1:2);
         return {label:'Invoice Reg. No. (Qualified Invoice Issuer)', value:'T'+(9-s%9)+b}; },
@@ -177,7 +178,7 @@ const LOCALES = {
     cities:[['Amsterdam','North Holland','10## @@'],['Rotterdam','South Holland','30## @@'],['Utrecht','Utrecht','35## @@'],['The Hague','South Holland','25## @@'],['Eindhoven','North Brabant','56## @@']] },
   sv_SE:{ country:'Sweden', tax:'SE', style:'D', phone:'08 555 ## ###',
     name:()=>pick(['Restaurang Smak','Krogen Björken','Bistro Norden','Matsalen','Café Fika','Kök & Bar Havet','Gastro Stockholm','Wärdshuset Ekan','Matbaren','Smörgåsen']),
-    street:()=>`${pick(['Stor','Drottning','Kung','Kyrk','Järn','Skol','Vasa','Hamn','Bergs','Ringvägen'])}${pick(['gatan','vägen','torget','allén'])} ${num(1,140)}`,
+    street:()=>`${pick(['Drottninggatan','Kungsgatan','Storgatan','Kyrkogatan','Skolgatan','Vasagatan','Hamngatan','Järnvägsgatan','Bergsgatan','Ringvägen','Nygatan','Parkgatan','Västra vägen','Östra vägen'])} ${num(1,140)}`,
     cities:[['Stockholm','Stockholm County','11# ##'],['Gothenburg','Västra Götaland','41# ##'],['Malmö','Skåne','21# ##'],['Uppsala','Uppsala County','75# ##']] },
   en_SG:{ country:'Singapore', tax:'SG', style:'S', phone:'6555 ####',
     name:()=>pick(['Hawker Delights','Lion City Kitchen','Kopitiam Corner','Chilli Crab House','Laksa Lane','Satay Street','Orchard Noodle Bar','Peranakan Table','Merlion Cafe','Garden Rice House']),
@@ -494,7 +495,7 @@ const POSTAL = {
     'Maastricht':W5('6211 6212 6213 6214 6221 6222 6223 6224').map(x => x+' @@'),
     'Arnhem':W5('6811 6812 6813 6814 6815 6816 6821 6822').map(x => x+' @@') },
   sv_SE:{ 'Stockholm':['111 20','111 21','111 22','111 29','111 30','111 51','114 32','114 35','118 20','118 46','117 43'],
-    'Gothenburg':['411 01','411 05','411 11','411 18','413 01','414 51'], 'Malmö':['211 11','211 20','211 22','211 34','212 11'],
+    'Gothenburg':['411 01','411 05','411 11','411 18','413 01','414 51'], 'Malmö':['211 20','211 22','211 34','212 11'],
     'Uppsala':['753 10','753 20','752 37'], 'Linköping':['582 22','582 24','582 25'], 'Örebro':['702 11','702 22','703 61'], 'Umeå':['903 29','903 32','901 87'] },
   en_SG:{ 'Orchard':W5('238858 238801 238863 238877'), 'Marina Bay':W5('018956 018972 018989'), 'Tampines':W5('529510 529536 529653'),
     'Jurong East':W5('609731 609606 609434'), 'Woodlands':W5('738099 730900 737741') },
@@ -641,6 +642,15 @@ function assemble(L, f){
   }
 }
 
+const SE_ADDR = {   // real street + number + postcode triples (OpenStreetMap), so strict address validators accept the whole address
+  'Stockholm':[['Drottninggatan 20', '111 51'], ['Drottninggatan 80', '111 36'], ['Kungsgatan 10', '111 56'], ['Kungsgatan 30', '111 56'], ['Kungsgatan 44', '111 35'], ['Kungsgatan 60', '111 22'], ['Götgatan 20', '118 46'], ['Sveavägen 60', '111 34']],
+  'Gothenburg':[['Kungsgatan 25', '411 19'], ['Östra Hamngatan 30', '411 09'], ['Östra Hamngatan 45', '404 22'], ['Kungsportsavenyen 8', '411 36'], ['Kungsportsavenyen 20', '411 36']],
+  'Malmö':[['Södra Förstadsgatan 10', '211 43'], ['Södra Förstadsgatan 30', '211 43'], ['Södra Förstadsgatan 50', '211 43'], ['Kungsgatan 15', '211 49'], ['Davidshallsgatan 8', '211 45'], ['Davidshallsgatan 20', '211 45']],
+  'Uppsala':[['Drottninggatan 3', '751 42'], ['Drottninggatan 10', '751 42'], ['Sankt Olofsgatan 10', '753 11']],
+  'Linköping':[['Storgatan 10', '582 23'], ['Storgatan 30', '582 23'], ['Storgatan 50', '582 23'], ['Repslagaregatan 15', '582 22'], ['Drottninggatan 5', '582 26'], ['Drottninggatan 20', '582 26']],
+  'Örebro':[['Drottninggatan 30', '702 10'], ['Storgatan 10', '703 61'], ['Kungsgatan 5', '702 12'], ['Kungsgatan 15', '702 11']],
+  'Umeå':[['Storgatan 30', '903 21'], ['Kungsgatan 50', '903 26']]
+};
 const seen = new Set();   // guarantees no repeats within this session
 function generate(code, region){
   const L = LOCALES[code];
@@ -649,13 +659,14 @@ function generate(code, region){
     if (!pool.length) throw new Error('No cities for region ' + region);
     const c = pick(pool);
     const city = c[0];
-    const f = { name: L.name(), street: L.street(), city, region:'', postal: postalFor(code, c), country: L.country };
+    const real = code === 'sv_SE' && SE_ADDR[city] ? pick(SE_ADDR[city]) : null;
+    const f = { name: L.name(), street: real ? real[0] : L.street(), city, region:'', postal: real ? real[1] : postalFor(code, c), country: L.country };
     f.region = c[1];
     for (const k of ['name','street','city','region','country']) f[k] = clean(f[k], code);
     const tax = TAX[L.tax]({gst:c[3]}); tax.label = plain(tax.label, code); tax.value = tax.value.replace(/[^A-Za-z0-9]/g, ""); // strip dashes/spaces/dots/slashes
     const phone = fill(L.phone).replace(/\D/g,'');   // national number, digits only (no country code)
     const full = assemble(L, f);          // full address keeps the natural spacing
-    f.postal = f.postal.replace(/\s/g, '');   // standalone postal-code field: no spaces
+    f.postal = f.postal.replace(/[^A-Za-z0-9]/g, '');   // standalone postal-code field: no spaces or hyphens
     const who = person(code);
     const key = f.name + full + tax.value + who.email;
     if (seen.has(key)) continue;
