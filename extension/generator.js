@@ -84,6 +84,20 @@ const TAX = {
         for(;;){ const b = p2(num(0,99))+p2(num(1,12))+p2(num(1,28))+pick(['4','5','6'])+digits(4);
           let s = wsum(b,[1,2,3,4,5,6,7,8,9,10,11])%11; if (s===10) s = wsum(b,[3,4,5,6,7,8,9,10,11,1,2])%11;
           if (s!==10) return {label:'BIN (Business ID)', value:b+s}; } },
+  BG(){ const b = String(num(1,9))+digits(7); let c = wsum(b,[1,2,3,4,5,6,7,8])%11;   // EIK (9 digits), mod 11 with a fallback weight set
+        if (c===10){ c = wsum(b,[3,4,5,6,7,8,9,10])%11; if (c===10) c = 0; }
+        return {label:'DDS (VAT)', value:'BG'+b+c}; },
+  EE(){ const b = '10'+digits(6); const c = (10 - wsum(b,[3,7,1,3,7,1,3,7])%10)%10;   // KMKR: starts with 10, weights 3713713 7, mod 10
+        return {label:'KMKR (VAT)', value:'EE'+b+c}; },
+  LV(){ for(;;){ const b = String(num(4,9))+digits(9);   // legal entity (first digit 4-9); whole 11-digit number must be 3 mod 11
+          const c = (3 - wsum(b,[9,1,4,8,3,10,2,5,7,6])%11 + 11)%11;
+          if (c<10) return {label:'PVN (VAT)', value:'LV'+b+c}; } },
+  SK(){ for(;;){ const b = String(num(1,9))+digits(1)+pick(['2','3','4','7','8','9'])+digits(7);   // IC DPH: 10 digits divisible by 11, 3rd digit 2,3,4,7,8,9
+          if (+b % 11 === 0) return {label:'IČ DPH (VAT)', value:'SK'+b}; } },
+  UA(){ const n = num(10000000, 99999999) , s = String(n).slice(0,7), mid = n >= 30000000 && n <= 60000000;   // EDRPOU, 8 digits, mod 11
+        const w1 = mid ? [7,1,2,3,4,5,6] : [1,2,3,4,5,6,7], w2 = mid ? [9,3,4,5,6,7,8] : [3,4,5,6,7,8,9];
+        let c = wsum(s,w1)%11; if (c===10){ c = wsum(s,w2)%11; if (c===10) c = 0; }
+        return {label:'EDRPOU (Company Code)', value:s+c}; },
   AR(){ for(;;){ const b = pick(['30','33','34'])+digits(8); const c = 11-wsum(b,[5,4,3,2,7,6,5,4,3,2])%11;   // CUIT, mod 11
           if (c!==10) return {label:'CUIT', value:b+(c===11?0:c)}; } },
   CL(){ const b = '76'+digits(6); let s=0; [...b].reverse().forEach((ch,i)=>{ s += +ch * (2 + i%6); }); const m = 11-s%11;   // RUT, mod 11 (K = 10)
@@ -232,6 +246,30 @@ const LOCALES = {
     name:()=>pick(['Restaurant Alatau','Cafe Bastau','Chaikhana Shanyrak','Restaurant Dostyk','Cafe Zhailau','Beshbarmak House','Restaurant Samal','Cafe Nur','Astana Coffee House','Restaurant Sunkar']),
     street:()=>`${num(1,150)} ${pick(['Abay','Dostyk','Nazarbayev','Tole Bi','Satpayev','Zheltoksan','Kabanbay Batyr','Al-Farabi','Tauke Khan','Gogol'])} Street`,
     cities:[['Almaty','Almaty','0500##'],['Astana','Astana','0100##'],['Shymkent','Shymkent','1600##'],['Karaganda','Karaganda Region','1000##'],['Aktobe','Aktobe Region','0300##']] },
+  bg_BG:{ country:'Bulgaria', tax:'BG', style:'D', phone:'02 555 ####',
+    name:()=>pick(['Restorant Zlatnata Ribka','Mehana Balkanska Skara','Kashta Slanchev Bryag','Bistro Vitosha','Kafene Rodopa','Restorant Tsarevets','Mehana Chiflika','Grill Bar Plovdiv','Sladkarnitsa Dunav','Restorant Stara Planina']),
+    street:()=>`${pick(['ul.','bul.'])} ${pick(['Vitosha','Tsar Osvoboditel','Hristo Botev','Aleksandar Stamboliyski','Bulgaria','Graf Ignatiev','Rakovski','Patriarh Evtimiy','Shipka','Slivnitsa','Han Asparuh','Knyaz Boris I'])} ${num(1,120)}`,
+    cities:[['Sofia','Sofia City','1###'],['Plovdiv','Plovdiv','40##'],['Varna','Varna','90##'],['Burgas','Burgas','80##'],['Ruse','Ruse','70##']] },
+  et_EE:{ country:'Estonia', tax:'EE', style:'D', phone:'655 ####',
+    name:()=>pick(['Restoran Vana Tallinn','Kohvik Linnuse','Pubi Kuldne Lõvi','Restoran Kolm Karu','Kohvik Tammsaare','Söögikoht Merekalda','Restoran Raekoja','Pizzeria Narva','Krog Metsatee','Kohvik Pärnu Rand']),
+    street:()=>rnd(4)===0 ? `${pick(['Pärnu','Narva','Tartu','Tallinna'])} mnt ${num(1,150)}` : `${pick(['Viru','Lai','Pikk','Rüütli','Kooli','Raekoja','Vabaduse','Tammsaare','Aia','Sadama','Kesk','Jaama'])} tn ${num(1,60)}`,
+    cities:[['Tallinn','Harju County','1####'],['Tartu','Tartu County','5####'],['Pärnu','Pärnu County','80###'],['Narva','Ida-Viru County','20###'],['Viljandi','Viljandi County','71###']] },
+  lv_LV:{ country:'Latvia', tax:'LV', style:'D', phone:'67 555 ###',
+    name:()=>pick(['Restorāns Vecrīga','Krogs Pie Zelta Gaiļa','Kafejnīca Saulīte','Restorāns Daugava','Bistro Brīvība','Krogs Vecais Dzirnavnieks','Kafejnīca Jūrmala','Restorāns Rātslaukums','Pelmeņu Māja','Kafejnīca Liepa']),
+    street:()=>`${pick(['Brīvības','Elizabetes','Tērbatas','Lāčplēša','Dzirnavu','Valdemāra','Gertrūdes','Kalēju','Skolas','Rūpniecības','Stacijas','Lielā'])} iela ${num(1,150)}`,
+    cities:[['Riga','Riga','10##'],['Daugavpils','Latgale','54##'],['Liepāja','Kurzeme','34##'],['Jelgava','Zemgale','30##'],['Ventspils','Kurzeme','36##']] },
+  sk_SK:{ country:'Slovakia', tax:'SK', style:'D', phone:'02 555 ## ###',
+    name:()=>pick(['Reštaurácia U Zlatého Orla','Koliba Pod Hradom','Pivnica Starý Mlyn','Kaviareň Slávia','Bistro Tatra','Salaš Zelená Lúka','Reštaurácia Dunaj','Hostinec Pri Studni','Gazdovský Dvor','Reštaurácia Hviezda']),
+    street:()=>`${pick(['Hlavná','Štúrova','Mlynská','Obchodná','Kollárova','Štefánikova','Záhradná','Školská','Kráľovská','Nádražná','Jesenského','Sládkovičova'])} ${num(1,120)}`,
+    cities:[['Bratislava','Bratislava Region','8## ##'],['Košice','Košice Region','04# ##'],['Prešov','Prešov Region','08# ##'],['Žilina','Žilina Region','01# ##'],['Banská Bystrica','Banská Bystrica Region','97# ##']] },
+  uk_UA:{ country:'Ukraine', tax:'UA', style:'F', phone:'44 555 ## ##',
+    name:()=>pick(['Restoran Zolotyi Kolos','Kavyarnia Lviv','Restoran Dnipro','Varenychna Babusyn Kut','Kafe Kashtan','Restoran Stare Misto','Korchma Pid Dubom','Borshch i Salo','Restoran Karpaty','Kavyarnia Vyshneviy Sad']),
+    street:()=>`${pick(['vulytsia','prospekt'])} ${pick(['Khreshchatyk','Sumska','Derybasivska','Pushkinska','Sofiivska','Soborna','Shevchenka','Hrushevskoho','Franka','Lesi Ukrainky','Bandery','Svobody'])} ${num(1,150)}`,
+    cities:[['Kyiv','Kyiv City','0####'],['Kharkiv','Kharkiv Oblast','61###'],['Odesa','Odesa Oblast','65###'],['Dnipro','Dnipropetrovsk Oblast','49###'],['Lviv','Lviv Oblast','79###']] },
+  ru_UA:{ country:'Ukraine', tax:'UA', style:'F', phone:'44 555 ## ##',
+    name:()=>pick(['Restoran Zolotoy Kolos','Kafe Vishnyovyy Sad','Trattoriya Odessa','Stolovaya No 5','Restoran Dnepr','Pelmennaya U Babushki','Kafe Kashtan','Restoran Staryy Gorod','Chaynaya Sobornaya','Kafe Karpaty']),
+    street:()=>`${pick(['ulitsa','prospekt'])} ${pick(['Khreshchatik','Sumskaya','Deribasovskaya','Pushkinskaya','Sofiyskaya','Sobornaya','Shevchenko','Gogolya','Rybalskaya','Bogdana Khmelnitskogo'])} ${num(1,150)}`,
+    cities:[['Kiev','Kiev City','0####'],['Kharkov','Kharkov Oblast','61###'],['Odessa','Odessa Oblast','65###'],['Dnepr','Dnepropetrovsk Oblast','49###'],['Lvov','Lvov Oblast','79###']] },
   es_AR:{ country:'Argentina', tax:'AR', style:'D', phone:'11 5555 ####',
     name:()=>pick(['Parrilla El Gaucho','La Cantina del Puerto','Café Palermo','Restaurante El Asador','Bodegón San Telmo','Pizzería La Esquina','Parrilla La Estancia','Rotisería El Palenque','Confitería La Plaza','Cervecería La Costanera']),
     street:()=>`${pick(['Avenida','Calle'])} ${pick(['Corrientes','Santa Fe','Rivadavia','San Martín','Belgrano','Libertador','Mitre','9 de Julio','Sarmiento','Alvear'])} ${num(1,5000)}`,
@@ -547,6 +585,12 @@ const POSTAL = {
     'Poznań':['60-001','60-101','61-001','61-601','60-700'] },
   ro_RO:{ 'Bucharest':W5('010011 010101 020001 030001 040001 050001 060001'), 'Cluj-Napoca':W5('400001 400100 400112 400347'),
     'Timișoara':W5('300001 300011 300100 300222'), 'Iași':W5('700001 700100 700505'), 'Constanța':W5('900001 900100 900178') },
+  bg_BG:{ 'Sofia':W5('1000 1113 1164 1303 1407 1612 1712'), 'Plovdiv':W5('4000 4002 4003 4004'), 'Varna':W5('9000 9002 9010'), 'Burgas':W5('8000 8001 8002'), 'Ruse':W5('7000 7002') },
+  et_EE:{ 'Tallinn':W5('10111 10117 10119 10127 10145 11312 12618'), 'Tartu':W5('50090 50103 51003 51004'), 'Pärnu':W5('80010 80011 80042'), 'Narva':W5('20307 20308'), 'Viljandi':W5('71003 71020') },
+  lv_LV:{ 'Riga':W5('1001 1004 1010 1011 1013 1050'), 'Daugavpils':W5('5401 5404 5410'), 'Liepāja':W5('3401 3414 3416'), 'Jelgava':W5('3001 3002 3004'), 'Ventspils':W5('3601 3602') },
+  sk_SK:{ 'Bratislava':['811 01','811 02','811 04','821 08','831 01'], 'Košice':['040 01','040 11','041 90'], 'Prešov':['080 01','080 06'], 'Žilina':['010 01','010 08'], 'Banská Bystrica':['974 01','974 05'] },
+  uk_UA:{ 'Kyiv':W5('01001 01004 01010 02000 03150 04050'), 'Kharkiv':W5('61000 61002 61003'), 'Odesa':W5('65000 65012 65026'), 'Dnipro':W5('49000 49005 49044'), 'Lviv':W5('79000 79005 79007 79013') },
+  ru_UA:{ 'Kiev':W5('01001 01004 01010 02000 03150 04050'), 'Kharkov':W5('61000 61002 61003'), 'Odessa':W5('65000 65012 65026'), 'Dnepr':W5('49000 49005 49044'), 'Lvov':W5('79000 79005 79007 79013') },
   sl_SI:{ 'Ljubljana':W5('1000 1210 1231 1260 1291'), 'Maribor':['2000'], 'Celje':['3000'], 'Kranj':['4000'], 'Koper':['6000'] },
   fi_FI:{ 'Helsinki':['00100','00120','00130','00140','00150','00170','00180','00200','00250','00260','00500','00530'],
     'Espoo':['02100','02110','02120','02130','02150','02200','02600','02650'], 'Tampere':['33100','33200','33210','33230','33500','33520'],
@@ -608,6 +652,11 @@ const NAMES = {
   el:{f:['Giorgos','Maria','Dimitris','Eleni','Nikos','Katerina','Kostas','Sofia','Yannis','Anna'],l:['Papadopoulos','Georgiou','Dimitriou','Nikolaou','Ioannou','Konstantinou','Vasileiou','Pappas','Antoniou','Makris']},
   pl:{f:['Jakub','Anna','Piotr','Katarzyna','Michał','Magdalena','Tomasz','Agnieszka','Paweł','Zofia'],l:['Nowak','Kowalski','Wiśniewski','Wójcik','Kowalczyk','Kamiński','Lewandowski','Zieliński','Szymański','Woźniak']},
   ro:{f:['Andrei','Maria','Ioan','Elena','Mihai','Ioana','Alexandru','Ana','Ștefan','Cristina'],l:['Popescu','Ionescu','Popa','Stan','Dumitru','Gheorghe','Constantin','Marin','Șerban','Munteanu']},
+  bg:{f:['Georgi','Maria','Ivan','Elena','Dimitar','Ivanka','Nikolay','Desislava','Petar','Radostina'],l:['Ivanov','Georgiev','Dimitrov','Petrov','Todorov','Nikolov','Stoyanov','Kolev','Angelov','Atanasov']},
+  et:{f:['Mart','Katrin','Andres','Kadri','Toomas','Liis','Jaan','Triin','Rein','Maarja'],l:['Tamm','Saar','Sepp','Mägi','Kask','Kukk','Rebane','Ilves','Pärn','Koppel']},
+  lv:{f:['Jānis','Anna','Andris','Līga','Māris','Inese','Edgars','Laura','Kārlis','Ilze'],l:['Bērziņš','Kalniņš','Ozoliņš','Jansons','Liepiņš','Krūmiņš','Balodis','Eglītis','Zariņš','Vītols']},
+  sk:{f:['Peter','Mária','Martin','Zuzana','Jozef','Katarína','Ján','Lucia','Tomáš','Eva'],l:['Horváth','Kováč','Varga','Tóth','Nagy','Baláž','Szabó','Molnár','Lukáč','Novák']},
+  ua:{f:['Oleksandr','Olena','Andrii','Iryna','Serhii','Oksana','Taras','Natalia','Volodymyr','Kateryna'],l:['Shevchenko','Kovalenko','Bondarenko','Tkachenko','Kravchenko','Melnyk','Boyko','Moroz','Lysenko','Marchenko']},
   sl:{f:['Luka','Nina','Matej','Ana','Jan','Eva','Žiga','Maja','Tadej','Sara'],l:['Novak','Horvat','Kovačič','Krajnc','Zupančič','Potočnik','Kos','Vidmar','Golob','Kralj']},
   fi:{f:['Matti','Aino','Juha','Helmi','Antti','Elina','Mikko','Sanna','Eino','Oona'],l:['Korhonen','Virtanen','Mäkinen','Nieminen','Mäkelä','Hämäläinen','Laine','Heikkinen','Koskinen','Järvinen']},
   no:{f:['Magnus','Ingrid','Henrik','Emilie','Lars','Sofie','Kristian','Nora','Ola','Thea'],l:['Hansen','Johansen','Olsen','Larsen','Andersen','Pedersen','Nilsen','Kristiansen','Jensen','Karlsen']},
@@ -616,8 +665,8 @@ const NAMES = {
   pt:{f:['João','Maria','Pedro','Ana','Lucas','Beatriz','Rafael','Camila','Gustavo','Juliana'],l:['Silva','Santos','Oliveira','Souza','Pereira','Costa','Rodrigues','Almeida','Nascimento','Lima']},
   ja:{f:['Taro','Hanako','Kenta','Misaki','Daisuke','Yoko','Sho','Ai','Naoki','Yumi'],l:['Sato','Suzuki','Takahashi','Tanaka','Ito','Watanabe','Yamamoto','Nakamura','Kobayashi','Kato']},
 };
-const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it_IT:'it', nl_NL:'nl', sv_SE:'sv', hu_HU:'hu', nb_NO:'no', fi_FI:'fi', de_AT:'de', es_AR:'es', de_CH:'de', zh_CN:'cn', en_SG:'sg', en_MY:'my', en_TH:'th', en_VN:'vn', en_AE:'ae', zh_TW:'cn', en_HK:'hk', en_MO:'hk', ko_KR:'kr', ru_RU:'ru', ru_KZ:'kz', es_CL:'es', es_MX:'es', es_DO:'es', es_PR:'es', nl_BE:'nl', cs_CZ:'cs', da_DK:'da', el_GR:'el', fr_LU:'fr', pl_PL:'pl', ro_RO:'ro', sl_SI:'sl', pt_PT:'pt', pt_BR:'pt', ja_JP:'ja'};
-const ALIASES = {en_NO:'nb_NO', en_HU:'hu_HU', en_PT:'pt_PT', en_FI:'fi_FI', en_AT:'de_AT', en_BE:'nl_BE', en_CZ:'cs_CZ', en_DK:'da_DK', en_GR:'el_GR', en_LU:'fr_LU', en_PL:'pl_PL', en_RO:'ro_RO', en_SI:'sl_SI', en_AR:'es_AR', en_CL:'es_CL', en_MX:'es_MX', en_DO:'es_DO', en_PR:'es_PR', en_CH:'de_CH', en_RU:'ru_RU', en_KZ:'ru_KZ', en_CN:'zh_CN', en_TW:'zh_TW', en_KR:'ko_KR'};   // English-style codes accepted as exact matches
+const NAME_SET = {en_IE:'ie', en_IN:'in', de_DE:'de', fr_FR:'fr', es_ES:'es', it_IT:'it', nl_NL:'nl', sv_SE:'sv', hu_HU:'hu', nb_NO:'no', fi_FI:'fi', de_AT:'de', es_AR:'es', de_CH:'de', zh_CN:'cn', en_SG:'sg', en_MY:'my', en_TH:'th', en_VN:'vn', en_AE:'ae', zh_TW:'cn', en_HK:'hk', en_MO:'hk', ko_KR:'kr', ru_RU:'ru', ru_KZ:'kz', bg_BG:'bg', et_EE:'et', lv_LV:'lv', sk_SK:'sk', uk_UA:'ua', ru_UA:'ua', es_CL:'es', es_MX:'es', es_DO:'es', es_PR:'es', nl_BE:'nl', cs_CZ:'cs', da_DK:'da', el_GR:'el', fr_LU:'fr', pl_PL:'pl', ro_RO:'ro', sl_SI:'sl', pt_PT:'pt', pt_BR:'pt', ja_JP:'ja'};
+const ALIASES = {en_NO:'nb_NO', en_HU:'hu_HU', en_PT:'pt_PT', en_FI:'fi_FI', en_AT:'de_AT', en_BE:'nl_BE', en_CZ:'cs_CZ', en_DK:'da_DK', en_GR:'el_GR', en_LU:'fr_LU', en_PL:'pl_PL', en_RO:'ro_RO', en_SI:'sl_SI', en_AR:'es_AR', en_CL:'es_CL', en_MX:'es_MX', en_DO:'es_DO', en_PR:'es_PR', en_CH:'de_CH', en_RU:'ru_RU', en_KZ:'ru_KZ', en_BG:'bg_BG', en_EE:'et_EE', en_LV:'lv_LV', en_SK:'sk_SK', en_UA:'uk_UA', en_CN:'zh_CN', en_TW:'zh_TW', en_KR:'ko_KR'};   // English-style codes accepted as exact matches
 const ascii = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z]/g,'').toLowerCase();
 function person(code){
   const n = NAMES[NAME_SET[code] || 'en'], first = clean(pick(n.f), code), last = clean(pick(n.l), code);
